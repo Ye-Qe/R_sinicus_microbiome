@@ -1,0 +1,2640 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supplementary Methods - Rhinolophus sinicus gut microbiome</title><style>
+:root{--ink:#1a1d21;--mut:#5a6472;--line:#dfe4ea;--accent:#1F4E79;--soft:#f6f8fa}
+*{box-sizing:border-box}
+body{margin:0;background:#f4f6f8;color:var(--ink);
+ font-family:Georgia,serif;font-size:15.5px;line-height:1.75}
+.page{max-width:920px;margin:0 auto;background:#fff;padding:60px 72px 88px;
+ box-shadow:0 2px 18px rgba(0,0,0,.07)}
+h1{font-size:27px;line-height:1.35;margin:0 0 4px}
+.sub{font-size:14px;color:var(--mut);margin:0 0 22px}
+h2{font-size:19px;margin:40px 0 12px;padding:6px 0 6px 12px;border-left:5px solid var(--accent);
+ background:var(--soft);color:#12385c;font-family:"Helvetica Neue",Arial,sans-serif}
+h3{font-size:15px;margin:24px 0 8px;font-family:"Helvetica Neue",Arial,sans-serif;
+ color:#243042;text-transform:none;letter-spacing:.2px}
+h4{font-size:14px;margin:18px 0 6px;color:#3a4658;font-family:"Helvetica Neue",Arial,sans-serif}
+p{margin:0 0 12px;text-align:justify;hyphens:auto}
+ul,ol{margin:0 0 12px;padding-left:26px}
+li{margin-bottom:5px;text-align:justify}
+code{font-family:Consolas,"SF Mono",monospace;font-size:12.6px;background:#f2f5f8;
+ padding:1px 5px;border-radius:3px;border:1px solid #e3e9ef}
+pre{background:#20262e;color:#e6edf3;padding:14px 18px;border-radius:6px;overflow-x:auto;
+ font-family:Consolas,"SF Mono",monospace;font-size:12.2px;line-height:1.6;margin:0 0 14px}
+pre .c{color:#8b98a5}
+table{width:100%;border-collapse:collapse;font-family:"Helvetica Neue",Arial,sans-serif;
+ font-size:12.4px;margin:6px 0 18px}
+th,td{padding:6px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:#f2f5f8;font-weight:600;color:#243042;border-bottom:1.5px solid #c7d1dc}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.box{background:#f7f9fb;border:1px solid var(--line);border-left:4px solid var(--accent);
+ padding:14px 18px;margin:0 0 16px;font-size:14.5px}
+.warn{background:#fffaf0;border:1px solid #ecdcb8;border-left:4px solid #B58B1F;
+ padding:14px 18px;margin:0 0 16px;font-size:14.2px}
+.note{background:#f4f8f6;border:1px solid #cfe0d8;border-left:4px solid #1F5C4A;
+ padding:14px 18px;margin:0 0 16px;font-size:14.2px}
+.cap{font-size:13px;color:var(--mut);margin:-10px 0 18px}
+.small{font-size:13px;color:var(--mut)}
+ol.refs{font-size:13.2px;line-height:1.65;padding-left:0;list-style:none}
+ol.refs li{margin-bottom:6px;padding-left:28px;position:relative}
+ol.refs .rn{position:absolute;left:0;color:var(--mut)}
+.toc{background:var(--soft);border:1px solid var(--line);padding:16px 22px;font-size:13.8px;
+ columns:2;column-gap:32px}
+.toc a{color:#12385c;text-decoration:none;display:block;margin-bottom:4px}
+hr{border:none;border-top:1px solid var(--line);margin:36px 0}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;
+ background:#eaf1f7;color:#1F4E79;margin-left:6px;vertical-align:2px;
+ font-family:"Helvetica Neue",Arial,sans-serif}
+
+pre{white-space:pre;tab-size:4} details{margin:0 0 16px} summary{cursor:pointer;font-family:Arial,sans-serif;font-size:13px;color:#12385c;padding:5px 0} @media(max-width:720px){.page{padding:24px 20px}.toc{columns:1}} @media print{.page{box-shadow:none;max-width:none;padding:0} pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:9pt}} </style></head><body><div class="page">
+<h1>Supplementary Methods</h1><p class="sub"><b>A global cross-species pathogen network reveals the evolutionary and transmission potential of the <i>Rhinolophus sinicus</i> gut microbiome</b><br>Computational workflow and analysis scripts</p>
+<div class="box"><p><b>Computational methods.</b> This document presents the analysis scripts and command templates in the order of the major analytical stages. The parameters are included in the corresponding code blocks. To execute an individual script, save its code using the filename shown above the block, install the required software, and specify the relevant input and output paths and reference files. For scripts using environment variables, set the required variables before execution.</p><p style="margin:0">The code is intended for a Linux environment with Bash and Python. Individual stages require their corresponding bioinformatic tools and Python libraries (including NumPy, Numba, Biopython, pandas and Matplotlib).</p></div>
+<div class="toc"><a href="#s1">S1 &nbsp;Read quality control</a><a href="#s2">S2 &nbsp;Host sequence removal</a><a href="#s3">S3 &nbsp;Metagenomic assembly and contig processing</a><a href="#s4">S4 &nbsp;Viral identification and sequence annotation</a><a href="#s5">S5 &nbsp;Phylogenetic analysis and candidate viral lineages</a><a href="#s6">S6 &nbsp;Bacterial taxonomy and priority-pathogen screening</a><a href="#s7">S7 &nbsp;Functional gene annotation</a><a href="#s8">S8 &nbsp;ARG–MGE co-occurrence and genomic context</a><a href="#s9">S9 &nbsp;Host prediction and cross-host sequence sharing</a><a href="#s10">S10 &nbsp;Figure 6 network statistical analysis</a></div>
+<h2 id="s1">S1 &nbsp;Read quality control</h2>
+<p>Short-read and long-read filtering. Public read quality filtering uses Q20, a maximum low-quality base fraction of 40%, a minimum length of 50 bp and poly-G trimming. The bat short-read and long-read commands use the software defaults for quality filtering.</p>
+<h3>S1.1 &nbsp;<code>01_bat_read_qc.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 4 ]] || { echo &quot;Usage: $0 READ1 READ2 CLEAN1 CLEAN2&quot; &gt;&amp;2; exit 2; }
+fastp -i &quot;$1&quot; -I &quot;$2&quot; -o &quot;$3&quot; -O &quot;$4&quot; -w &quot;${THREADS:-8}&quot;</pre>
+<h3>S1.2 &nbsp;<code>02_long_read_qc.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 2 ]] || { echo &quot;Usage: $0 INPUT_FASTQ OUTPUT_FASTQ&quot; &gt;&amp;2; exit 2; }
+filtlong &quot;$1&quot; &gt; &quot;$2&quot;</pre>
+<h3>S1.3 &nbsp;<code>public_read_qc.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 6 ]] || { echo &quot;Usage: $0 r1 r2 clean_r1 clean_r2 html_report json_report&quot; &gt;&amp;2; exit 2; }
+fastp -i &quot;$1&quot; -I &quot;$2&quot; -o &quot;$3&quot; -O &quot;$4&quot; -q 20 -u 40 -l 50 --trim_poly_g -w &quot;${THREADS:-15}&quot; -h &quot;$5&quot; -j &quot;$6&quot;</pre>
+<h2 id="s2">S2 &nbsp;Host sequence removal</h2>
+<p>Align short reads to the host index and long reads to the host reference, then remove aligned long reads. The short-read alignment command produces SAM output for subsequent host-read exclusion.</p>
+<h3>S2.1 &nbsp;<code>03_host_alignment_short.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 4 ]] || { echo &quot;Usage: $0 HOST_INDEX READ1 READ2 OUTPUT_SAM&quot; &gt;&amp;2; exit 2; }
+bowtie2 -x &quot;$1&quot; -1 &quot;$2&quot; -2 &quot;$3&quot; -S &quot;$4&quot; -p &quot;${THREADS:-8}&quot;</pre>
+<h3>S2.2 &nbsp;<code>04_host_alignment_long.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 3 ]] || { echo &quot;Usage: $0 HOST_REFERENCE LONG_READS OUTPUT_PAF&quot; &gt;&amp;2; exit 2; }
+minimap2 -x map-ont -t &quot;${THREADS:-8}&quot; &quot;$1&quot; &quot;$2&quot; &gt; &quot;$3&quot;</pre>
+<h3>S2.3 &nbsp;<code>remove_aligned_long_reads.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 5 ]] || { echo &quot;Usage: $0 alignment reads host_ids filtered_fastq filtered_fasta&quot; &gt;&amp;2; exit 2; }
+cut -f 1 &quot;$1&quot; | sort -u &gt; &quot;$3&quot;
+seqkit grep --pattern-file &quot;$3&quot; --invert-match &quot;$2&quot; -o &quot;$4&quot;
+seqtk seq -A &quot;$4&quot; &gt; &quot;$5&quot;</pre>
+<h2 id="s3">S3 &nbsp;Metagenomic assembly and contig processing</h2>
+<p>Assembly, polishing, sequence clustering and assembly quality summaries. Supply the corresponding read sets, assembly products and tool-specific configuration files. MEGAHIT uses the meta-large preset and a minimum contig length of 500 bp.</p>
+<h3>S3.1 &nbsp;<code>05_megahit.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 3 ]] || { echo &quot;Usage: $0 READ1 READ2 OUTPUT_DIRECTORY&quot; &gt;&amp;2; exit 2; }
+megahit -1 &quot;$1&quot; -2 &quot;$2&quot; --presets meta-large --min-contig-len 500 -t &quot;${THREADS:-8}&quot; -o &quot;$3&quot;</pre>
+<h3>S3.2 &nbsp;<code>06_opera_ms.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 6 ]] || { echo &quot;Usage: $0 OPERA_MS_PROGRAM SHORT_ASSEMBLY READ1 READ2 LONG_READS OUTDIR&quot; &gt;&amp;2; exit 2; }
+perl &quot;$1&quot; --contig-file &quot;$2&quot; --short-read1 &quot;$3&quot; --short-read2 &quot;$4&quot; --long-read &quot;$5&quot; --out-dir &quot;$6&quot; --num-processors &quot;${THREADS:-8}&quot;</pre>
+<h3>S3.3 &nbsp;<code>07_nextpolish.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 1 ]] || { echo &quot;Usage: $0 VERIFIED_CONFIG&quot; &gt;&amp;2; exit 2; }
+nextPolish &quot;$1&quot;</pre>
+<h3>S3.4 &nbsp;<code>long_read_assembly.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+mapfile -t SAMPLES &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+
+INPUT_TEMPLATE=&quot;${P_INPUT_TEMPLATE:?Set P_INPUT_TEMPLATE}&quot;
+OUTPUT_DIR=&quot;${P_OUTPUT_DIR:?Set P_OUTPUT_DIR}&quot;
+
+mkdir -p &quot;$OUTPUT_DIR&quot;
+
+source &quot;${CONDA_SH:-$(conda info --base)/etc/profile.d/conda.sh}&quot; &amp;&amp; conda activate flye
+
+for SAMPLE in &quot;${SAMPLES[@]}&quot;; do
+    echo &quot;Processing sample: $SAMPLE&quot;
+
+    INPUT_FILE=$(printf &quot;$INPUT_TEMPLATE&quot; &quot;$SAMPLE&quot;)
+
+    if [ ! -f &quot;$INPUT_FILE&quot; ]; then
+        echo &quot;WARNING: Missing input for $SAMPLE: $INPUT_FILE&quot;
+        continue
+    fi
+
+    SAMPLE_OUTPUT_DIR=&quot;$OUTPUT_DIR/$SAMPLE&quot;
+    mkdir -p &quot;$SAMPLE_OUTPUT_DIR&quot;
+
+    flye --nano-raw &quot;$INPUT_FILE&quot; \
+         --out-dir &quot;$SAMPLE_OUTPUT_DIR&quot; \
+         --meta \
+         -i 3 \
+         --threads 16
+
+    echo &quot;Sample $SAMPLE completed&quot;
+    echo &quot;----------------------------------------&quot;
+done
+
+conda deactivate
+
+echo &quot;All samples processed&quot;</pre>
+<h3>S3.5 &nbsp;<code>merge_and_cluster_assemblies.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+
+mapfile -t samples &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+
+source &quot;${CONDA_SH:-$(conda info --base)/etc/profile.d/conda.sh}&quot;
+conda activate mmseqs
+
+mkdir -p combined
+mkdir -p mmseqs
+mkdir -p tmp
+
+echo &quot;Processing samples...&quot;
+echo &quot;======================================&quot;
+
+for sample in &quot;${samples[@]}&quot;; do
+    echo &quot;Processing sample: $sample&quot;
+
+    nextpolish_file=&quot;$(configured_path &quot;${P_NEXTPOLISH_FILE:?Set P_NEXTPOLISH_FILE}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+    ont_file=&quot;$(configured_path &quot;${P_ONT_FILE:?Set P_ONT_FILE}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+    combined_file=&quot;combined/${sample}_combined.fasta&quot;
+
+    if [ ! -f &quot;$nextpolish_file&quot; ]; then
+        echo &quot;Missing NextPolish file: $nextpolish_file&quot;
+    fi
+
+    if [ ! -f &quot;$ont_file&quot; ]; then
+        echo &quot;Missing ONT file: $ont_file&quot;
+    fi
+
+    echo &quot;Merging FASTA files...&quot;
+    if [ -f &quot;$nextpolish_file&quot; ] &amp;&amp; [ -f &quot;$ont_file&quot; ]; then
+        cat &quot;$nextpolish_file&quot; &quot;$ont_file&quot; &gt; &quot;$combined_file&quot;
+        echo &quot;Merged: $combined_file&quot;
+    elif [ -f &quot;$nextpolish_file&quot; ]; then
+        cp &quot;$nextpolish_file&quot; &quot;$combined_file&quot;
+        echo &quot;Using NextPolish only: $combined_file&quot;
+    elif [ -f &quot;$ont_file&quot; ]; then
+        cp &quot;$ont_file&quot; &quot;$combined_file&quot;
+        echo &quot;Using ONT only: $combined_file&quot;
+    else
+        echo &quot;Both inputs missing for $sample; skipping&quot;
+        continue
+    fi
+
+    mkdir -p &quot;mmseqs/${sample}&quot;
+
+    echo &quot;Running MMseqs2 clustering...&quot;
+    mmseqs easy-cluster &quot;$combined_file&quot; &quot;mmseqs/${sample}/cluster_result_${sample}&quot; &quot;tmp/mmseqs_${sample}&quot; \
+        --min-seq-id 0.90 \
+        -c 0.8 \
+        --cov-mode 0 \
+        --threads 50
+
+    if [ $? -eq 0 ]; then
+        echo &quot;Sample $sample completed&quot;
+
+        echo &quot;Removing temporary files...&quot;
+        rm -rf &quot;tmp/mmseqs_${sample}&quot;
+    else
+        echo &quot;Sample $sample failed&quot;
+        rm -rf &quot;tmp/mmseqs_${sample}&quot; 2&gt;/dev/null || true
+    fi
+    echo &quot;------------------------&quot;
+done
+
+if [ -z &quot;$(ls -A tmp 2&gt;/dev/null)&quot; ]; then
+    rmdir tmp
+    echo &quot;Temporary directory removed&quot;
+fi
+
+echo &quot;All samples processed&quot;
+echo &quot;Merged files: combined/&quot;
+echo &quot;Clustered files: mmseqs/&quot;</pre>
+<h3>S3.6 &nbsp;<code>normalize_cluster_headers.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+fix_special_fasta_structure() {
+    local input_file=&quot;$1&quot;
+    local output_file=&quot;$2&quot;
+
+    echo &quot;Normalizing FASTA headers...&quot;
+
+    awk &#x27;
+    BEGIN {
+        skip_next = 0
+        header_printed = 0
+    }
+    /^&gt;/ {
+        if (skip_next) {
+            skip_next = 0
+            next
+        } else {
+            current_header = $0
+            header_printed = 0
+            skip_next = 1
+        }
+        next
+    }
+    {
+        if (!header_printed &amp;&amp; current_header != &quot;&quot;) {
+            print current_header
+            header_printed = 1
+        }
+        if (header_printed) {
+            print $0
+        }
+    }
+    &#x27; &quot;$input_file&quot; &gt; &quot;$output_file&quot;
+
+    echo &quot;Completed: $input_file -&gt; $output_file&quot;
+    echo &quot;Original sequence count: $(grep -c &quot;^&gt;&quot; &quot;$input_file&quot;)&quot;
+    echo &quot;New sequence count: $(grep -c &quot;^&gt;&quot; &quot;$output_file&quot;)&quot;
+}
+
+mapfile -t samples &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+for sample in &quot;${samples[@]}&quot;; do
+    input_file=&quot;$(configured_path &quot;${P_INPUT_FILE:?Set P_INPUT_FILE}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+    output_file=&quot;$(configured_path &quot;${P_OUTPUT_FILE:?Set P_OUTPUT_FILE}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+
+    if [ -f &quot;$input_file&quot; ]; then
+        echo &quot;Processing sample: $sample&quot;
+
+        cp &quot;$input_file&quot; &quot;${input_file}.backup&quot;
+
+        fix_special_fasta_structure &quot;$input_file&quot; &quot;$output_file&quot;
+
+        echo &quot;Checking results:&quot;
+        echo &quot;First six original lines:&quot;
+        head -6 &quot;$input_file&quot;
+        echo &quot;First four output lines:&quot;
+        head -4 &quot;$output_file&quot;
+
+        echo &quot;---&quot;
+    fi
+done</pre>
+<h3>S3.7 &nbsp;<code>run_quast.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 2 ]] || { echo &quot;Usage: $0 assembly output_dir&quot; &gt;&amp;2; exit 2; }
+quast.py &quot;$1&quot; -o &quot;$2&quot; -t &quot;${THREADS:-4}&quot;</pre>
+<h3>S3.8 &nbsp;<code>summarize_assembly_qc.py</code></h3><pre>#!/usr/bin/env python3
+
+
+import os
+import pandas as pd
+
+
+samples = [line.strip() for line in open(os.environ[&quot;SAMPLE_LIST&quot;], encoding=&quot;utf-8&quot;) if line.strip()]
+
+
+result_file_template = os.environ[&quot;P_RESULT_FILE_TEMPLATE&quot;]
+
+output_dir = os.environ[&quot;P_OUTPUT_DIR&quot;]
+
+output_filename = &quot;quast_full_summary.tsv&quot;
+
+
+os.makedirs(output_dir, exist_ok=True)
+
+
+all_samples_data = {}
+
+all_metrics = set()
+
+
+for sample in samples:
+    file_path = result_file_template.format(sample=sample)
+    sample_data = {}
+    
+    if not os.path.exists(file_path):
+        print(f&quot;Missing QUAST result for {sample}: {file_path}&quot;)
+        all_samples_data[sample] = sample_data
+        continue
+    
+
+    with open(file_path, &#x27;r&#x27;) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            
+
+            if &#x27;\t&#x27; in line:
+                metric, value = line.split(&#x27;\t&#x27;, 1)
+            else:
+                parts = line.split()
+                if len(parts) &lt; 2:
+                    continue
+                value = parts[-1]
+                metric = &#x27; &#x27;.join(parts[:-1])
+            
+            metric = metric.strip()
+            value = value.strip()
+            
+            sample_data[metric] = value
+            all_metrics.add(metric)
+    
+    all_samples_data[sample] = sample_data
+
+
+sorted_metrics = sorted(all_metrics)
+summary_data = {}
+for sample in samples:
+    sample_data = all_samples_data[sample]
+    summary_data[sample] = {metric: sample_data.get(metric, &quot;NA&quot;) for metric in sorted_metrics}
+
+
+summary_df = pd.DataFrame(summary_data).T
+summary_df.index.name = &quot;Sample&quot;
+
+
+output_file = os.path.join(output_dir, output_filename)
+summary_df.to_csv(output_file, sep=&#x27;\t&#x27;)
+
+print(f&quot;Metrics saved to {output_file}&quot;)
+print(f&quot;Metrics: {len(sorted_metrics)}; samples: {len(samples)}&quot;)</pre>
+<h2 id="s4">S4 &nbsp;Viral identification and sequence annotation</h2>
+<p>Identify candidate viral contigs, process CheckV and viral detection outputs, merge predictions, dereplicate sequences and annotate predicted proteins.</p>
+<h3>S4.1 &nbsp;<code>08_viral_length_filter.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 2 ]] || { echo &quot;Usage: $0 INPUT_FASTA OUTPUT_FASTA&quot; &gt;&amp;2; exit 2; }
+seqkit seq -m 1000 &quot;$1&quot; &gt; &quot;$2&quot;</pre>
+<h3>S4.2 &nbsp;<code>run_virsorter2.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 2 ]] || { echo &quot;Usage: $0 contigs output_dir&quot; &gt;&amp;2; exit 2; }
+virsorter run all --min-length 1000 --min-score 0.5 -j &quot;${THREADS:-28}&quot; -i &quot;$1&quot; -w &quot;$2&quot;</pre>
+<h3>S4.3 &nbsp;<code>select_virsorter_contigs.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+mapfile -t SAMPLES &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+
+BASE_VS2=&quot;${P_BASE_VS2:?Set P_BASE_VS2}&quot;
+OUTPUT_BASE=&quot;${P_OUTPUT_BASE:?Set P_OUTPUT_BASE}&quot;
+mkdir -p &quot;$OUTPUT_BASE&quot;
+
+if ! command -v seqkit &amp;&gt; /dev/null; then
+    echo &quot;ERROR: seqkit is missing; install with conda install -c bioconda seqkit&quot;
+    exit 1
+fi
+
+for SAMPLE in &quot;${SAMPLES[@]}&quot;; do
+    echo -e &quot;\nProcessing sample: $SAMPLE&quot;
+    VS2_FILE=&quot;$(configured_path &quot;${P_VS2_FILE:?Set P_VS2_FILE}&quot; &quot;BASE_VS2&quot; &quot;${BASE_VS2}&quot; &quot;SAMPLE&quot; &quot;${SAMPLE}&quot;)&quot;
+    ORIGINAL_FASTA=&quot;$(configured_path &quot;${P_ORIGINAL_FASTA:?Set P_ORIGINAL_FASTA}&quot; &quot;SAMPLE&quot; &quot;${SAMPLE}&quot;)&quot;
+    SAMPLE_OUTPUT_DIR=&quot;${OUTPUT_BASE}/${SAMPLE}&quot;
+    mkdir -p &quot;$SAMPLE_OUTPUT_DIR/full&quot;
+    mkdir -p &quot;$SAMPLE_OUTPUT_DIR/partial&quot;
+
+    if [ ! -f &quot;$VS2_FILE&quot; ]; then
+        echo &quot;Missing VirSorter2 results for $SAMPLE: $VS2_FILE&quot;
+        continue
+    fi
+    if [ ! -f &quot;$ORIGINAL_FASTA&quot; ]; then
+        echo &quot;Missing raw FASTA for $SAMPLE: $ORIGINAL_FASTA&quot;
+        continue
+    fi
+
+    FULL_IDS=&quot;${SAMPLE_OUTPUT_DIR}/full/${SAMPLE}_full_ids.txt&quot;
+    awk -F&#x27;\t&#x27; &#x27;$1 ~ /\|\|full/ &amp;&amp; $4 &gt;= 0.9 {gsub(/\|\|full/, &quot;&quot;, $1); print $1}&#x27; &quot;$VS2_FILE&quot; &gt; &quot;$FULL_IDS&quot;
+    FULL_COUNT=$(wc -l &lt; &quot;$FULL_IDS&quot;)
+    echo &quot;Full IDs: $FULL_COUNT&quot;
+
+    PARTIAL_IDS=&quot;${SAMPLE_OUTPUT_DIR}/partial/${SAMPLE}_partial_ids.txt&quot;
+    awk -F&#x27;\t&#x27; &#x27;$1 ~ /\|\|0_partial/ &amp;&amp; $4 &gt;= 0.9 {gsub(/\|\|[0-9]_partial/, &quot;&quot;, $1); print $1}&#x27; &quot;$VS2_FILE&quot; &gt; &quot;$PARTIAL_IDS&quot;
+    PARTIAL_COUNT=$(wc -l &lt; &quot;$PARTIAL_IDS&quot;)
+    echo &quot;Partial IDs: $PARTIAL_COUNT&quot;
+
+    if [ &quot;$FULL_COUNT&quot; -gt 0 ]; then
+        seqkit grep -f &quot;$FULL_IDS&quot; &quot;$ORIGINAL_FASTA&quot; -o &quot;${SAMPLE_OUTPUT_DIR}/full/${SAMPLE}_full_sequences.fasta&quot;
+        echo &quot;Full sequences: ${SAMPLE_OUTPUT_DIR}/full/${SAMPLE}_full_sequences.fasta&quot;
+    fi
+    if [ &quot;$PARTIAL_COUNT&quot; -gt 0 ]; then
+        seqkit grep -f &quot;$PARTIAL_IDS&quot; &quot;$ORIGINAL_FASTA&quot; -o &quot;${SAMPLE_OUTPUT_DIR}/partial/${SAMPLE}_partial_sequences.fasta&quot;
+        echo &quot;Partial sequences: ${SAMPLE_OUTPUT_DIR}/partial/${SAMPLE}_partial_sequences.fasta&quot;
+    fi
+done
+
+echo -e &quot;\nAll samples processed&quot;
+echo &quot;Results: $OUTPUT_BASE&quot;</pre>
+<h3>S4.4 &nbsp;<code>run_checkv.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 3 ]] || { echo &quot;Usage: $0 contigs output_dir checkv_database&quot; &gt;&amp;2; exit 2; }
+checkv end_to_end &quot;$1&quot; &quot;$2&quot; -t &quot;${THREADS:-30}&quot; -d &quot;$3&quot;</pre>
+<h3>S4.5 &nbsp;<code>select_checkv_contigs.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+mapfile -t samples &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+
+for sample in &quot;${samples[@]}&quot;; do
+    echo &quot;Processing sample: $sample&quot;
+
+    checkv_tsv=&quot;$(configured_path &quot;${P_CHECKV_TSV:?Set P_CHECKV_TSV}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+    fasta_path=&quot;$(configured_path &quot;${P_FASTA_PATH:?Set P_FASTA_PATH}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+
+    output_dir=&quot;$(configured_path &quot;${P_OUTPUT_DIR:?Set P_OUTPUT_DIR}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+    mkdir -p &quot;$output_dir&quot;
+
+    selected_names=&quot;$output_dir/selected_contigs_${sample}.txt&quot;
+    filtered_fasta=&quot;$output_dir/filtered_viruses_${sample}.fasta&quot;
+
+    if [[ ! -f &quot;$checkv_tsv&quot; ]]; then
+        echo &quot;Missing CheckV results for $sample; skipping&quot;
+        echo &quot;Missing: $checkv_tsv&quot;
+        continue
+    fi
+    if [[ ! -f &quot;$fasta_path&quot; ]]; then
+        echo &quot;Missing raw FASTA for $sample; skipping&quot;
+        echo &quot;Missing: $fasta_path&quot;
+        continue
+    fi
+
+    awk -F &#x27;\t&#x27; &#x27;BEGIN {OFS=&quot;\t&quot;}
+    NR&gt;1 {
+        provirus = $3;
+        contig_len = $2 + 0;
+        checkv_qual = $8;
+        if (provirus == &quot;No&quot; &amp;&amp; contig_len &gt;= 1000 &amp;&amp; (checkv_qual == &quot;High-quality&quot; || checkv_qual == &quot;Medium-quality&quot;)) {
+            print $1;
+        }
+    }&#x27; &quot;$checkv_tsv&quot; &gt; &quot;$selected_names&quot;
+
+    seqkit grep -f &quot;$selected_names&quot; &quot;$fasta_path&quot; -o &quot;$filtered_fasta&quot;
+
+    seq_count=$(wc -l &lt; &quot;$selected_names&quot;)
+    echo &quot;Sample $sample completed; selected contigs: $seq_count&quot;
+    echo &quot;Output: $filtered_fasta&quot;
+done
+
+echo &quot;All samples processed&quot;</pre>
+<h3>S4.6 &nbsp;<code>extract_partial_checkv_ids.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+mapfile -t samples &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+
+for sample in &quot;${samples[@]}&quot;; do
+    INPUT_FILE=&quot;$(configured_path &quot;${P_INPUT_FILE:?Set P_INPUT_FILE}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+    OUTPUT_DIR=&quot;$(configured_path &quot;${P_OUTPUT_DIR:?Set P_OUTPUT_DIR}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+    OUTPUT_FILE=&quot;$OUTPUT_DIR/partial_sequences.txt&quot;
+
+    if [ -f &quot;$INPUT_FILE&quot; ]; then
+        tail -n +2 &quot;$INPUT_FILE&quot; | cut -f1 &gt; &quot;$OUTPUT_FILE&quot;
+        echo &quot;Sample ${sample} completed: ${OUTPUT_FILE}&quot;
+    else
+        echo &quot;Missing ${INPUT_FILE}; skipping ${sample}&quot;
+    fi
+done
+
+echo &quot;All samples processed&quot;</pre>
+<h3>S4.7 &nbsp;<code>run_vibrant.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 3 ]] || { echo &quot;Usage: $0 contigs output_dir vibrant_database&quot; &gt;&amp;2; exit 2; }
+VIBRANT_run.py -i &quot;$1&quot; -folder &quot;$2&quot; -l 1000 -t &quot;${THREADS:-30}&quot; -d &quot;$3&quot;</pre>
+<h3>S4.8 &nbsp;<code>genomad_detection.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 3 ]] || { echo &quot;Usage: $0 contigs output_dir genomad_database&quot; &gt;&amp;2; exit 2; }
+genomad end-to-end --cleanup &quot;$1&quot; &quot;$2&quot; &quot;$3&quot;</pre>
+<h3>S4.9 &nbsp;<code>merge_viral_predictions.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+mapfile -t samples &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+
+for sample in &quot;${samples[@]}&quot;; do
+    echo &quot;Processing sample: $sample&quot;
+
+    checkv_ids=&quot;$(configured_path &quot;${P_CHECKV_IDS:?Set P_CHECKV_IDS}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+    genomad_ids=&quot;$(configured_path &quot;${P_GENOMAD_IDS:?Set P_GENOMAD_IDS}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+    virsorter_full=&quot;$(configured_path &quot;${P_VIRSORTER_FULL:?Set P_VIRSORTER_FULL}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+    virsorter_partial=&quot;$(configured_path &quot;${P_VIRSORTER_PARTIAL:?Set P_VIRSORTER_PARTIAL}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+    vibrant_ids=&quot;$(configured_path &quot;${P_VIBRANT_IDS:?Set P_VIBRANT_IDS}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+
+    raw_fasta=&quot;$(configured_path &quot;${P_RAW_FASTA:?Set P_RAW_FASTA}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+
+    output_dir=&quot;$(configured_path &quot;${P_OUTPUT_DIR:?Set P_OUTPUT_DIR}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+    mkdir -p &quot;$output_dir&quot;
+
+    merged_ids_raw=&quot;$output_dir/merged_ids_raw_${sample}.txt&quot;
+    unique_ids=&quot;$output_dir/unique_ids_${sample}.txt&quot;
+    filtered_fasta=&quot;$output_dir/filtered_final_${sample}.fasta&quot;
+    log_file=&quot;$output_dir/filter_log_${sample}.txt&quot;
+
+    input_id_files=()
+    tool_names=()
+
+    if [[ -f &quot;$checkv_ids&quot; ]]; then
+        input_id_files+=(&quot;$checkv_ids&quot;)
+        tool_names+=(&quot;CheckV&quot;)
+    else
+        echo &quot;Missing CheckV IDs: $checkv_ids&quot; | tee &quot;$log_file&quot;
+    fi
+
+    if [[ -f &quot;$genomad_ids&quot; ]]; then
+        input_id_files+=(&quot;$genomad_ids&quot;)
+        tool_names+=(&quot;geNomad&quot;)
+    else
+        echo &quot;Missing geNomad IDs: $genomad_ids&quot; | tee -a &quot;$log_file&quot;
+    fi
+
+    if [[ -f &quot;$virsorter_full&quot; ]]; then
+        input_id_files+=(&quot;$virsorter_full&quot;)
+        tool_names+=(&quot;VirSorter(full)&quot;)
+    else
+        echo &quot;Missing full VirSorter IDs: $virsorter_full&quot; | tee -a &quot;$log_file&quot;
+    fi
+
+	if [[ -f &quot;$virsorter_partial&quot; ]]; then
+		input_id_files+=(&quot;$virsorter_partial&quot;)
+		tool_names+=(&quot;VirSorter(partial)&quot;)
+	else
+		echo &quot;Missing partial VirSorter IDs: $virsorter_partial&quot; | tee -a &quot;$log_file&quot;
+	fi
+
+    if [[ -f &quot;$vibrant_ids&quot; ]]; then
+        input_id_files+=(&quot;$vibrant_ids&quot;)
+        tool_names+=(&quot;VIBRANT&quot;)
+    else
+        echo &quot;Missing VIBRANT IDs: $vibrant_ids&quot; | tee -a &quot;$log_file&quot;
+    fi
+
+    if [[ ! -f &quot;$raw_fasta&quot; ]]; then
+        echo &quot;Missing raw FASTA: $raw_fasta&quot; | tee -a &quot;$log_file&quot;
+        echo &quot;Skipping sample $sample&quot;
+        continue
+    fi
+
+    if [[ ${#input_id_files[@]} -eq 0 ]]; then
+        echo &quot;No IDs found for $sample; skipping&quot; | tee -a &quot;$log_file&quot;
+        continue
+    fi
+
+    echo &quot;Tool ID counts for $sample&quot; | tee -a &quot;$log_file&quot;
+    for i in &quot;${!input_id_files[@]}&quot;; do
+        file=&quot;${input_id_files[$i]}&quot;
+        tool=&quot;${tool_names[$i]}&quot;
+        count=$(grep -v -E &#x27;^#|^contig_id|^sequence_id|^&gt;&#x27; &quot;$file&quot; 2&gt;/dev/null | wc -l | awk &#x27;{print $1}&#x27;)
+        echo &quot;$tool ID count: $count&quot; | tee -a &quot;$log_file&quot;
+    done
+
+    echo -e &quot;\nMerging and deduplicating IDs&quot; | tee -a &quot;$log_file&quot;
+    cat &quot;${input_id_files[@]}&quot; 2&gt;/dev/null | grep -v -E &#x27;^#|^contig_id|^sequence_id|^&gt;&#x27; &gt; &quot;$merged_ids_raw&quot;
+    sort -u &quot;$merged_ids_raw&quot; &gt; &quot;$unique_ids&quot;
+
+    raw_total=$(wc -l &lt; &quot;$merged_ids_raw&quot;)
+    unique_total=$(wc -l &lt; &quot;$unique_ids&quot;)
+    echo &quot;Merged IDs before deduplication: $raw_total&quot; | tee -a &quot;$log_file&quot;
+    echo &quot;Unique IDs: $unique_total&quot; | tee -a &quot;$log_file&quot;
+
+    echo -e &quot;\nExtracting sequences&quot; | tee -a &quot;$log_file&quot;
+    seqkit grep -f &quot;$unique_ids&quot; &quot;$raw_fasta&quot; -o &quot;$filtered_fasta&quot;
+
+    extracted_count=$(seqkit stats &quot;$filtered_fasta&quot; 2&gt;/dev/null | grep -v &quot;file&quot; | awk &#x27;{print $2}&#x27;)
+    echo &quot;Extracted sequences: $extracted_count&quot; | tee -a &quot;$log_file&quot;
+
+
+    echo &quot;Sample $sample completed: $filtered_fasta&quot;
+done
+
+echo &quot;All samples processed&quot;</pre>
+<h3>S4.10 &nbsp;<code>09_viral_dereplication.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 3 ]] || { echo &quot;Usage: $0 INPUT_FASTA OUTPUT_PREFIX TEMP_DIR&quot; &gt;&amp;2; exit 2; }
+mmseqs easy-cluster &quot;$1&quot; &quot;$2&quot; &quot;$3&quot; --min-seq-id 0.90 -c 0.8 --cov-mode 0 --threads &quot;${THREADS:-8}&quot;</pre>
+<h3>S4.11 &nbsp;<code>10_prodigal.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 3 ]] || { echo &quot;Usage: $0 CONTIGS PROTEIN_OUTPUT GENE_OUTPUT&quot; &gt;&amp;2; exit 2; }
+prodigal -i &quot;$1&quot; -a &quot;$2&quot; -d &quot;$3&quot; -p meta -q</pre>
+<h3>S4.12 &nbsp;<code>11_nr_protein_search.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 3 ]] || { echo &quot;Usage: $0 PROTEINS NR_DB FILTERED_TSV&quot; &gt;&amp;2; exit 2; }
+blastp -query &quot;$1&quot; -db &quot;$2&quot; -evalue 1e-5 -num_threads &quot;${THREADS:-8}&quot; -outfmt &quot;6 qseqid sseqid pident qcovs evalue bitscore staxids&quot; | awk -F&#x27;\t&#x27; &#x27;$3&gt;=30 &amp;&amp; $4&gt;=50 &amp;&amp; $5&lt;=1e-5&#x27; &gt; &quot;$3&quot;</pre>
+<h2 id="s5">S5 &nbsp;Phylogenetic analysis and candidate viral lineages</h2>
+<p>Compare polymerase and replicase proteins with reference sequences, align and trim homologues, estimate phylogenetic trees, calculate patristic distances and apply the candidate selection rules. IQ-TREE uses ModelFinder, 1,000 ultrafast bootstrap replicates and 1,000 SH-aLRT replicates. The final selector uses support thresholds of 95 and 90 for the respective support measures and the numeric criteria implemented in the input-table columns. These are study-specific marker-based screening rules, with ICTV taxonomy as the reference framework; they are not formal taxonomic demarcation criteria. The approach is informed by Wang et al. (2024), Microbiome 12:235 (doi:10.1186/s40168-024-01955-1). The selector requires the assembled genetic-distance and annotation tables as inputs.</p>
+<h3>S5.1 &nbsp;<code>12_marker_search.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 3 ]] || { echo &quot;Usage: $0 PROTEINS MARKER_DB FILTERED_TSV&quot; &gt;&amp;2; exit 2; }
+blastp -query &quot;$1&quot; -db &quot;$2&quot; -num_threads &quot;${THREADS:-8}&quot; -outfmt &quot;6 qseqid sseqid pident qcovs evalue bitscore&quot; | awk -F&#x27;\t&#x27; &#x27;$3&gt;=30 &amp;&amp; $4&gt;=80&#x27; &gt; &quot;$3&quot;</pre>
+<h3>S5.2 &nbsp;<code>13_marker_tree.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 4 ]] || { echo &quot;Usage: $0 MARKER_FASTA ALIGNED_FASTA TRIMMED_FASTA TREE_PREFIX&quot; &gt;&amp;2; exit 2; }
+mafft --auto --thread &quot;${THREADS:-8}&quot; &quot;$1&quot; &gt; &quot;$2&quot;
+trimal -in &quot;$2&quot; -out &quot;$3&quot; -gappyout
+iqtree3 -s &quot;$3&quot; -m MFP -B 1000 --alrt 1000 -T &quot;${THREADS:-8}&quot; --prefix &quot;$4&quot;</pre>
+<h3>S5.3 &nbsp;<code>18_patristic_distance.py</code></h3><pre>#!/usr/bin/env python3
+
+
+import argparse
+import csv
+import math
+from Bio import Phylo
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument(&quot;--tree&quot;, required=True, help=&quot;Newick tree with branch lengths&quot;)
+    p.add_argument(&quot;--pairs&quot;, required=True, help=&quot;TSV with query and reference columns&quot;)
+    p.add_argument(&quot;--out&quot;, required=True)
+    a = p.parse_args()
+    tree = Phylo.read(a.tree, &quot;newick&quot;)
+    tips = tree.get_terminals()
+    by_name = {x.name: x for x in tips}
+    if len(by_name) != len(tips) or None in by_name:
+        raise ValueError(&quot;Tree tip names must be present and unique&quot;)
+    for clade in tree.find_clades():
+        if clade is tree.root:
+            continue
+        if clade.branch_length is None or not math.isfinite(clade.branch_length) or clade.branch_length &lt; 0:
+            raise ValueError(&quot;Missing, negative or invalid branch length&quot;)
+    results = []
+    with open(a.pairs, encoding=&quot;utf-8-sig&quot;, newline=&quot;&quot;) as f:
+        r = csv.DictReader(f, delimiter=&quot;\t&quot;)
+        if not {&quot;query&quot;, &quot;reference&quot;}.issubset(r.fieldnames or []):
+            raise ValueError(&quot;Pair table requires query and reference columns&quot;)
+        for row in r:
+            q, ref = row[&quot;query&quot;], row[&quot;reference&quot;]
+            if q not in by_name or ref not in by_name or q == ref:
+                raise ValueError(f&quot;Invalid query/reference pair: {q}, {ref}&quot;)
+            results.append((q, ref, tree.distance(by_name[q], by_name[ref])))
+    with open(a.out, &quot;w&quot;, encoding=&quot;utf-8&quot;, newline=&quot;&quot;) as f:
+        w = csv.writer(f, delimiter=&quot;\t&quot;, lineterminator=&quot;\n&quot;)
+        w.writerow([&quot;query&quot;, &quot;reference&quot;, &quot;patristic_distance&quot;])
+        w.writerows(results)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</pre>
+<h3>S5.4 &nbsp;<code>select_candidate_lineages.py</code></h3><pre>#!/usr/bin/env python3
+
+
+import argparse
+import csv
+import math
+import re
+from collections import defaultdict, Counter
+from pathlib import Path
+
+EXCLUDE = {&quot;unknown&quot;, &quot;Autographiviridae&quot;, &quot;Arenbergviridae&quot;, &quot;Baculoviridae&quot;,
+           &quot;Caulimoviridae&quot;, &quot;Chaseviridae&quot;, &quot;Herelleviridae&quot;, &quot;Inoviridae&quot;,
+           &quot;Iridoviridae&quot;, &quot;Metaviridae&quot;, &quot;Poxviridae&quot;, &quot;Retroviridae&quot;}
+
+HEADER = [&quot;\u57fa\u56e0\u540d&quot;, &quot;contigID&quot;, &quot;\u75c5\u6bd2\u5bb6\u65cf&quot;, &quot;\u5c5e&quot;, &quot;\u79cd&quot;, &quot;\u65b0\u7c7b\u578b&quot;, &quot;\u5c5e\u79cd\u5212\u5206&quot;, &quot;\u6837\u672c\u6765\u6e90&quot;]
+SPECIES, GENUS = &quot;\u5019\u9009\u65b0\u7269\u79cd&quot;, &quot;\u5019\u9009\u65b0\u5c5e&quot;
+
+
+def read_table(path, auto=False):
+    with open(path, encoding=&quot;utf-8-sig&quot;, newline=&quot;&quot;) as handle:
+        first = handle.readline()
+        if not first:
+            raise ValueError(f&quot;Empty input: {path}&quot;)
+        handle.seek(0)
+        sep = (&quot;,&quot; if first.count(&quot;,&quot;) &gt; first.count(&quot;\t&quot;) else &quot;\t&quot;) if auto else &quot;\t&quot;
+        return list(csv.reader(handle, delimiter=sep))
+
+
+def numeric(s):
+    try:
+        v = float(s)
+        return v if math.isfinite(v) else None
+    except (ValueError, TypeError):
+        return None
+
+
+def select(genetic, family, taxonomy, sample, *, confirm_legacy=False):
+    header, *rows = read_table(genetic, auto=True)
+    if len(header) &lt; 21:
+        raise ValueError(&quot;Legacy candidate table must have at least 21 columns.&quot;)
+    print(f&quot;{sample}: columns 8/9/17/18/20/21 = &quot; + &quot; | &quot;.join(header[i-1] for i in (8,9,17,18,20,21)))
+
+
+    if not confirm_legacy:
+        raise ValueError(&quot;Verify the printed header against the archived analysis, then use --confirm-legacy-columns.&quot;)
+    fam = defaultdict(list)
+    for r in read_table(family)[1:]:
+        if len(r) &lt; 2:
+            raise ValueError(&quot;Malformed family annotation row&quot;)
+        if r[-1] not in EXCLUDE:
+            fam[r[0]].append(r[-1])
+    tax = defaultdict(list)
+    for r in read_table(taxonomy)[1:]:
+        if len(r) &lt; 3:
+            raise ValueError(&quot;Malformed taxonomy row&quot;)
+        tax[r[0]].append((r[-2], r[-1]))
+    selected = []
+    stats = Counter()
+    for r in rows:
+        if len(r) &lt; 21:
+            raise ValueError(f&quot;Malformed candidate row in {genetic}&quot;)
+        if r[16] != &quot;\u662f&quot; or r[17] not in (SPECIES, GENUS):
+            continue
+        sh, uf, value20, value21 = map(numeric, (r[7], r[8], r[19], r[20]))
+        if None in (sh, uf, value20, value21):
+            stats[&quot;nonnumeric_eligible_rows&quot;] += 1
+            continue
+        if sh &lt; 90 or uf &lt; 95 or value21 &lt; 80:
+            continue
+        if (r[17] == SPECIES and value20 &gt; 85) or (r[17] == GENUS and value20 &gt; 75):
+            continue
+        stats[&quot;passed_numeric_filters&quot;] += 1
+        gene = r[0]
+        match = re.search(r&quot;opera_contig_[0-9]+_np[0-9]+&quot;, gene) or re.search(r&quot;contig_[0-9]+&quot;, gene)
+        contig = match.group(0) if match else &quot;unknown&quot;
+        if gene not in tax or contig not in fam:
+            stats[&quot;unmatched_annotation_rows&quot;] += 1
+            continue
+        for g, s in sorted(tax[gene]):
+            for f in sorted(fam[contig]):
+                level = &quot;\u79cd&quot; if r[17] == SPECIES else &quot;\u5c5e&quot;
+                selected.append([gene, contig, f, g, s, r[17], level, sample])
+
+    selected.sort(key=lambda r: (r[1], r[0], r[5], r[3], r[4], r[2]))
+    print(f&quot;{sample}: {len(selected)} joined rows; audit={dict(stats)}&quot;)
+    return selected
+
+
+def write_table(path, rows, header):
+    with open(path, &quot;w&quot;, encoding=&quot;utf-8&quot;, newline=&quot;&quot;) as f:
+        w = csv.writer(f, delimiter=&quot;\t&quot;, lineterminator=&quot;\n&quot;)
+        w.writerow(header)
+        w.writerows(rows)
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument(&quot;--manifest&quot;, required=True, help=&quot;TSV columns sample, genetic, family, taxonomy; file paths relative to manifest or absolute&quot;)
+    p.add_argument(&quot;--summary&quot;, required=True)
+    p.add_argument(&quot;--deduplicated&quot;, required=True)
+    p.add_argument(&quot;--confirm-legacy-columns&quot;, action=&quot;store_true&quot;)
+    args = p.parse_args()
+    manifest = Path(args.manifest).resolve()
+    all_rows = []
+    seen_samples = set()
+    with manifest.open(encoding=&quot;utf-8-sig&quot;, newline=&quot;&quot;) as f:
+        reader = csv.DictReader(f, delimiter=&quot;\t&quot;)
+        if not {&quot;sample&quot;,&quot;genetic&quot;,&quot;family&quot;,&quot;taxonomy&quot;}.issubset(reader.fieldnames or []):
+            raise ValueError(&quot;Manifest requires sample, genetic, family, taxonomy columns.&quot;)
+        for row in reader:
+            sample = row[&quot;sample&quot;]
+            if not sample or sample in seen_samples:
+                raise ValueError(&quot;Sample IDs must be nonempty and unique.&quot;)
+            seen_samples.add(sample)
+            paths = [manifest.parent / row[key] for key in (&quot;genetic&quot;, &quot;family&quot;, &quot;taxonomy&quot;)]
+            all_rows.extend(select(*paths, sample, confirm_legacy=args.confirm_legacy_columns))
+    if not seen_samples:
+        raise ValueError(&quot;Empty sample manifest&quot;)
+    unique = {}
+    for row in all_rows:
+        unique.setdefault((row[3], row[4], row[6]), row)
+    write_table(args.summary, all_rows, HEADER)
+    write_table(args.deduplicated, unique.values(), HEADER)
+    print(f&quot;All rows: {len(all_rows)}; unique genus/species/rank keys: {len(unique)}&quot;)
+    print(&quot;Unique counts by rank:&quot;, dict(Counter(r[6] for r in unique.values())))
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</pre>
+<h3>S5.5 &nbsp;<code>summarize_candidate_hits.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+mapfile -t SAMPLES &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+SUMMARY_FILE=&quot;${P_SUMMARY_FILE:?Set P_SUMMARY_FILE}&quot;
+OUTPUT_DIR=&quot;${P_OUTPUT_DIR:?Set P_OUTPUT_DIR}&quot;
+OUTPUT_FILE=&quot;${OUTPUT_DIR}/new_virus_blast_matches.tsv&quot;
+
+mkdir -p &quot;${OUTPUT_DIR}&quot;
+echo -e &quot;\xe5\x9f\xba\xe5\x9b\xa0\xe5\x90\x8d\t\xe6\xaf\x94\xe5\xaf\xb9\xe5\xba\x8f\xe5\x88\x97\xe5\x90\x8d\t\xe7\x97\x85\xe6\xaf\x92\xe5\xae\xb6\xe6\x97\x8f\xe5\x90\x8d\t\xe6\xa0\xb7\xe6\x9c\xac\xe5\x90\x8d&quot; &gt; &quot;${OUTPUT_FILE}&quot;
+
+for sample in &quot;${SAMPLES[@]}&quot;; do
+    echo &quot;Processing sample: ${sample}&quot;
+
+    BLAST_FILE=&quot;$(configured_path &quot;${P_BLAST_FILE:?Set P_BLAST_FILE}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+
+    if [ ! -f &quot;${BLAST_FILE}&quot; ]; then
+        echo &quot;Missing BLAST file for ${sample}: ${BLAST_FILE}&quot;
+        continue
+    fi
+
+    awk -F&#x27;\t&#x27; -v s=&quot;${sample}&quot; &#x27;
+        BEGIN {OFS=&quot;\t&quot;}
+        NR &gt; 1 &amp;&amp; $NF == s {print $1, $3, $NF}
+    &#x27; &quot;${SUMMARY_FILE}&quot; &gt; &quot;${OUTPUT_DIR}/tmp_${sample}.tsv&quot;
+
+    awk &#x27;
+        BEGIN {FS=&quot;\t&quot;; OFS=&quot;\t&quot;}
+        NR == FNR {
+            gene_info[$1] = $2 &quot;\t&quot; $3;
+            next;
+        }
+        $1 in gene_info {
+            print $1, $2, gene_info[$1];
+        }
+    &#x27; &quot;${OUTPUT_DIR}/tmp_${sample}.tsv&quot; &quot;${BLAST_FILE}&quot; &gt;&gt; &quot;${OUTPUT_FILE}&quot;
+
+    rm -f &quot;${OUTPUT_DIR}/tmp_${sample}.tsv&quot;
+done
+
+TOTAL=$(awk &#x27;NR&gt;1&#x27; &quot;${OUTPUT_FILE}&quot; | wc -l)
+echo -e &quot;\nProcessing complete&quot;
+echo -e &quot;Extracted candidate hits: ${TOTAL}&quot;
+echo -e &quot;Output: ${OUTPUT_FILE}&quot;</pre>
+<h2 id="s6">S6 &nbsp;Bacterial taxonomy and priority-pathogen screening</h2>
+<p>Assign contig taxonomy using CAT and Centrifuge, reconcile taxonomic annotations and select the requested bacterial taxa. Taxonomic matches do not by themselves establish antimicrobial resistance phenotypes.</p>
+<h3>S6.1 &nbsp;<code>cat_classification.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+mapfile -t SAMPLES &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+
+CAT_PATH=&quot;${P_CAT_PATH:?Set P_CAT_PATH}&quot;
+
+DB_PATH=&quot;${P_DB_PATH:?Set P_DB_PATH}&quot;
+TAX_PATH=&quot;${P_TAX_PATH:?Set P_TAX_PATH}&quot;
+
+source &quot;${CONDA_SH:-$(conda info --base)/etc/profile.d/conda.sh}&quot; &amp;&amp; conda activate CAT
+
+if [ ! -x &quot;$CAT_PATH&quot; ]; then
+    echo &quot;CAT_pack is missing or not executable: $CAT_PATH&quot;
+    exit 1
+fi
+
+for SAMPLE in &quot;${SAMPLES[@]}&quot;; do
+    mkdir -p &quot;CAT/$SAMPLE&quot;
+
+    &quot;$CAT_PATH&quot; contigs \
+        -c &quot;$(configured_path &quot;${P_PATH_1:?Set P_PATH_1}&quot; &quot;SAMPLE&quot; &quot;${SAMPLE}&quot;)&quot; \
+        -d &quot;$DB_PATH&quot; \
+        -t &quot;$TAX_PATH&quot; \
+        -o &quot;CAT/$SAMPLE/filtered_final_${SAMPLE}_tax&quot;
+
+    echo &quot;Sample $SAMPLE processed.&quot;
+done
+
+conda deactivate
+
+echo &quot;All 23 samples completed!&quot;</pre>
+<h3>S6.2 &nbsp;<code>cat_add_names.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+mapfile -t SAMPLES &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+
+CAT_PATH=&quot;${P_CAT_PATH:?Set P_CAT_PATH}&quot;
+TAX_PATH=&quot;${P_TAX_PATH:?Set P_TAX_PATH}&quot;
+OUTPUT_ROOT=&quot;CAT&quot;
+
+source &quot;${CONDA_SH:-$(conda info --base)/etc/profile.d/conda.sh}&quot; &amp;&amp; conda activate CAT
+
+if [ ! -x &quot;$CAT_PATH&quot; ]; then
+    echo &quot;CAT_pack is not executable: $CAT_PATH&quot;
+    exit 1
+fi
+
+for SAMPLE in &quot;${SAMPLES[@]}&quot;; do
+    echo -e &quot;\nAdding taxonomy names for $SAMPLE&quot;
+
+    CLASS_FILE=&quot;$OUTPUT_ROOT/$SAMPLE/filtered_final_${SAMPLE}_tax.contig2classification.txt&quot;
+
+    if [ ! -f &quot;$CLASS_FILE&quot; ]; then
+        echo &quot;Missing classification file; skipping: $CLASS_FILE&quot;
+        continue
+    fi
+
+    OUTPUT_FILE=&quot;$OUTPUT_ROOT/$SAMPLE/filtered_final_${SAMPLE}_tax_with_names.txt&quot;
+
+    &quot;$CAT_PATH&quot; add_names \
+        -i &quot;$CLASS_FILE&quot; \
+        -o &quot;$OUTPUT_FILE&quot; \
+        -t &quot;$TAX_PATH&quot;
+
+    echo &quot;Named taxonomy output: $OUTPUT_FILE&quot;
+done
+
+conda deactivate
+echo -e &quot;\nTaxonomy names added; results in $OUTPUT_ROOT&quot;</pre>
+<h3>S6.3 &nbsp;<code>cat_extract_species.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+CAT_BASE_DIR=&quot;${P_CAT_BASE_DIR:?Set P_CAT_BASE_DIR}&quot;
+
+mapfile -t SAMPLES &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+
+
+for SAMPLE in &quot;${SAMPLES[@]}&quot;; do
+    echo -e &quot;\n========================================&quot;
+    echo -e &quot;Processing sample: ${SAMPLE}&quot;
+    echo -e &quot;========================================\n&quot;
+
+    INPUT_FILE=&quot;${CAT_BASE_DIR}/${SAMPLE}/filtered_final_${SAMPLE}_tax_with_names.txt&quot;
+    OUTPUT_DIR=&quot;${CAT_BASE_DIR}/${SAMPLE}/annotated&quot;
+    OUTPUT_FILE=&quot;${OUTPUT_DIR}/species_family.txt&quot;
+    mkdir -p &quot;$OUTPUT_DIR&quot;
+
+
+    awk -F&#x27;\t&#x27; -v OFS=&#x27; &#x27; &#x27;
+    {
+        specie = $1
+
+        species = &quot;unknown&quot;
+
+        for (i=1; i&lt;=NF; i++) {
+            if ($i ~ /\(species\)/) {
+                sub(/ \(species\):.*/, &quot;&quot;, $i)
+                species = $i
+                break
+            }
+        }
+
+        print specie, species
+    }&#x27; &quot;$INPUT_FILE&quot; &gt; &quot;$OUTPUT_FILE&quot;
+
+
+    total_lines=$(wc -l &lt; &quot;$INPUT_FILE&quot;)
+    output_lines=$(wc -l &lt; &quot;$OUTPUT_FILE&quot;)
+    echo -e &quot;Sample ${SAMPLE} completed&quot;
+    echo -e &quot;Input rows: ${total_lines}&quot;
+    echo -e &quot;Output rows: ${output_lines}&quot;
+    echo -e &quot;Output: ${OUTPUT_FILE}\n&quot;
+done
+
+
+echo -e &quot;========================================&quot;
+echo -e &quot;All samples processed&quot;
+echo -e &quot;========================================\n&quot;
+echo &quot;Output pattern: ${CAT_BASE_DIR}/&lt;sample&gt;/annotated/species_family.txt&quot;
+echo &quot;Format: species\tfamily (unknown if missing)&quot;</pre>
+<h3>S6.4 &nbsp;<code>centrifuge_classification.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+source &quot;${CONDA_SH:-$(conda info --base)/etc/profile.d/conda.sh}&quot; &amp;&amp; conda activate last
+
+mapfile -t samples &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+
+for sample in &quot;${samples[@]}&quot;; do
+    mkdir -p centrifuge/&quot;$sample&quot;
+
+    input_file=&quot;$(configured_path &quot;${P_INPUT_FILE:?Set P_INPUT_FILE}&quot; &quot;sample&quot; &quot;${sample}&quot;)&quot;
+
+    centrifuge -f \
+        -x &quot;${P_PATH_1:?Set P_PATH_1}&quot; \
+        -U &quot;$input_file&quot; \
+        --report-file centrifuge/&quot;$sample&quot;/&quot;${sample}&quot;_report.tsv \
+        -S centrifuge/&quot;$sample&quot;/&quot;${sample}&quot;_result.tsv \
+        -p 56
+done
+
+conda deactivate</pre>
+<h3>S6.5 &nbsp;<code>centrifuge_add_taxonomy.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+mapfile -t SAMPLES &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+TAXONKIT_DB=&quot;${P_TAXONKIT_DB:?Set P_TAXONKIT_DB}&quot;
+CONDA_SH=&quot;${CONDA_SH:-$(conda info --base)/etc/profile.d/conda.sh}&quot;
+ENV_NAME=&quot;last&quot;
+
+
+process_sample() {
+    local sample=$1
+    echo -e &quot;\n\n======================================&quot;
+    echo &quot;Processing sample: $sample&quot;
+    echo &quot;======================================&quot;
+
+    local INPUT_FILE=&quot;centrifuge/${sample}/${sample}_result.tsv&quot;
+    local OUTPUT_DIR=&quot;centrifuge/${sample}/annotated&quot;
+    mkdir -p &quot;$OUTPUT_DIR&quot;
+
+
+    echo -e &quot;\nActivating environment and checking taxonkit&quot;
+    source &quot;$CONDA_SH&quot; &amp;&amp; conda activate &quot;$ENV_NAME&quot; || {
+        echo &quot;ERROR: Environment activation failed&quot;
+        exit 1
+    }
+    taxonkit version
+    taxonkit reformat --data-dir &quot;$TAXONKIT_DB&quot; -i &lt;(echo &quot;1003110&quot;) -f &quot;{k}\t{p}\t{c}\t{o}\t{f}&quot; --miss-rank-repl &quot;unknown&quot;
+
+
+    echo -e &quot;\nExtracting contig and taxID pairs&quot;
+    awk -F&#x27;\t&#x27; &#x27;NR&gt;1 &amp;&amp; $3 != &quot;unclassified&quot; {print $1 &quot;\t&quot; $3}&#x27; &quot;$INPUT_FILE&quot; &gt; &quot;${OUTPUT_DIR}/tmp_contig_taxid_all.txt&quot;
+    step1_lines=$(wc -l &lt; &quot;${OUTPUT_DIR}/tmp_contig_taxid_all.txt&quot;)
+    echo &quot;Valid contig rows: ${step1_lines}&quot;
+    head -n3 &quot;${OUTPUT_DIR}/tmp_contig_taxid_all.txt&quot;
+
+
+    echo -e &quot;\nExtracting taxIDs, including duplicates&quot;
+    cut -f2 &quot;${OUTPUT_DIR}/tmp_contig_taxid_all.txt&quot; &gt; &quot;${OUTPUT_DIR}/tmp_all_taxids.txt&quot;
+    step2_lines=$(wc -l &lt; &quot;${OUTPUT_DIR}/tmp_all_taxids.txt&quot;)
+    echo &quot;TaxID rows: ${step2_lines}&quot;
+    head -n3 &quot;${OUTPUT_DIR}/tmp_all_taxids.txt&quot;
+
+
+    echo -e &quot;\nExtracting taxonomic ranks&quot;
+    taxonkit reformat \
+        --data-dir &quot;$TAXONKIT_DB&quot; \
+        -i 1 \
+        --taxid-field 1 \
+        -f &quot;{k}\t{p}\t{c}\t{o}\t{f}\t{g}\t{s}&quot; \
+        -r &quot;unknown&quot; \
+        --trim \
+        -o &quot;${OUTPUT_DIR}/tmp_tax_levels.tsv&quot; \
+        2&gt; &quot;${OUTPUT_DIR}/step3_error.log&quot; \
+        &lt; &quot;${OUTPUT_DIR}/tmp_all_taxids.txt&quot;
+
+    step3_lines=$(wc -l &lt; &quot;${OUTPUT_DIR}/tmp_tax_levels.tsv&quot;)
+    echo &quot;Taxonomy rows: ${step3_lines}&quot;
+    head -n5 &quot;${OUTPUT_DIR}/tmp_tax_levels.tsv&quot;
+    echo -e &quot;Error log:&quot;
+    cat &quot;${OUTPUT_DIR}/step3_error.log&quot;
+
+
+    echo -e &quot;\nGenerating final taxonomy table&quot;
+    paste &quot;${OUTPUT_DIR}/tmp_contig_taxid_all.txt&quot; &quot;${OUTPUT_DIR}/tmp_tax_levels.tsv&quot; | \
+    awk -F&#x27;\t&#x27; -v OFS=&#x27;\t&#x27; &#x27;{ print $1, $3, $4, $5, $6, $7, $8, $9, $10 }&#x27; &gt; &quot;${OUTPUT_DIR}/${sample}_final_temp.tsv&quot;
+
+    echo -e &quot;contig_name\ttaxID\tkingdom\tphylum\tclass\torder\tfamily\tgenus\tspecies&quot; | \
+    cat - &quot;${OUTPUT_DIR}/${sample}_final_temp.tsv&quot; &gt; &quot;${OUTPUT_DIR}/${sample}_final.tsv&quot;
+    rm &quot;${OUTPUT_DIR}/${sample}_final_temp.tsv&quot;
+
+    step4_lines=$(wc -l &lt; &quot;${OUTPUT_DIR}/${sample}_final.tsv&quot;)
+    echo &quot;Final rows including header: ${step4_lines}&quot;
+    echo &quot;Annotated rows: $((step4_lines - 1))&quot;
+    head -n5 &quot;${OUTPUT_DIR}/${sample}_final.tsv&quot;
+
+
+    conda deactivate
+    echo -e &quot;\nSample ${sample} completed&quot;
+    echo &quot;Output: ${OUTPUT_DIR}/${sample}_final.tsv&quot;
+    echo &quot;Format: contig_name\ttaxID\tkingdom\tphylum\tclass\torder\tfamily&quot;
+}
+
+
+echo &quot;Processing ${#SAMPLES[@]} samples...&quot;
+for sample in $SAMPLES; do
+    process_sample &quot;$sample&quot;
+done
+
+echo -e &quot;\nAll samples processed&quot;</pre>
+<h3>S6.6 &nbsp;<code>merge_bacterial_taxonomy.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+set -euo pipefail
+
+mapfile -t SAMPLES &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+BASE_CAT_PATH=&quot;${P_BASE_CAT_PATH:?Set P_BASE_CAT_PATH}&quot;
+BASE_CENT_PATH=&quot;${P_BASE_CENT_PATH:?Set P_BASE_CENT_PATH}&quot;
+OUTPUT_DIR=&quot;${P_OUTPUT_DIR:?Set P_OUTPUT_DIR}&quot;
+
+mkdir -p &quot;$OUTPUT_DIR&quot;
+echo &quot;Output directory: $OUTPUT_DIR&quot;
+echo &quot;Samples: ${#SAMPLES[@]}&quot;
+echo &quot;----------------------------------------&quot;
+
+for SAMPLE in &quot;${SAMPLES[@]}&quot;; do
+    echo &quot;Processing sample: $SAMPLE&quot;
+
+    CAT_FILE=&quot;${BASE_CAT_PATH}/${SAMPLE}/annotated/species_family.txt&quot;
+    CENTRIFUGE_FILE=&quot;${BASE_CENT_PATH}/${SAMPLE}/annotated/${SAMPLE}_final.tsv&quot;
+    OUTPUT_FILE=&quot;${OUTPUT_DIR}/${SAMPLE}_merged_species.tsv&quot;
+
+    file_missing=0
+    if [[ ! -f &quot;$CAT_FILE&quot; ]]; then
+        echo &quot;Missing CAT file: $CAT_FILE&quot;
+        file_missing=1
+    fi
+    if [[ ! -f &quot;$CENTRIFUGE_FILE&quot; ]]; then
+        echo &quot;Missing Centrifuge file: $CENTRIFUGE_FILE&quot;
+        file_missing=1
+    fi
+    if [[ $file_missing -eq 1 ]]; then
+        echo &quot;Skipping $SAMPLE due to missing files&quot;
+        echo &quot;----------------------------------------&quot;
+        continue
+    fi
+
+    awk &#x27;
+        /^#/ {next}
+        NF &gt;= 1 {
+            contig=$1;
+            $1=&quot;&quot;;
+            species=$0;
+            gsub(/^[ \t]+/, &quot;&quot;, species);
+            gsub(/[ \t]+$/, &quot;&quot;, species);
+            print contig &quot;\t&quot; (species == &quot;&quot; ? &quot;unknown&quot; : species);
+        }
+    &#x27; &quot;$CAT_FILE&quot; &gt; /tmp/${SAMPLE}_cat_annot.tmp
+
+    declare -A cat_map
+    while IFS=$&#x27;\t&#x27; read -r contig species; do
+        cat_map[&quot;$contig&quot;]=&quot;$species&quot;
+    done &lt; /tmp/${SAMPLE}_cat_annot.tmp
+
+    awk -F &#x27;\t&#x27; &#x27;
+        NR &gt;= 1 {
+            contig=$1;
+            species=$9;
+            gsub(/^[ \t]+/, &quot;&quot;, species);
+            gsub(/[ \t]+$/, &quot;&quot;, species);
+            print contig &quot;\t&quot; (species == &quot;&quot; ? &quot;unknown&quot; : species);
+        }
+    &#x27; &quot;$CENTRIFUGE_FILE&quot; &gt; /tmp/${SAMPLE}_cent_annot.tmp
+
+    declare -A cent_map
+    while IFS=$&#x27;\t&#x27; read -r contig species; do
+        cent_map[&quot;$contig&quot;]=&quot;$species&quot;
+    done &lt; /tmp/${SAMPLE}_cent_annot.tmp
+
+    cut -f1 /tmp/${SAMPLE}_cat_annot.tmp &gt; /tmp/${SAMPLE}_cat_contigs.tmp
+    cut -f1 /tmp/${SAMPLE}_cent_annot.tmp &gt; /tmp/${SAMPLE}_cent_contigs.tmp
+    cat /tmp/${SAMPLE}_cat_contigs.tmp /tmp/${SAMPLE}_cent_contigs.tmp | sort | uniq &gt; /tmp/${SAMPLE}_all_contigs.tmp
+
+    echo -e &quot;contig_name\tspecies_annotation&quot; &gt; &quot;$OUTPUT_FILE&quot;
+    while read -r contig; do
+        if [[ -z &quot;$contig&quot; ]]; then continue; fi
+        if [[ -n &quot;${cat_map[$contig]-}&quot; &amp;&amp; &quot;${cat_map[$contig]}&quot; != &quot;unknown&quot; ]]; then
+            echo -e &quot;$contig\t${cat_map[$contig]}&quot; &gt;&gt; &quot;$OUTPUT_FILE&quot;
+        elif [[ -n &quot;${cent_map[$contig]-}&quot; &amp;&amp; &quot;${cent_map[$contig]}&quot; != &quot;unknown&quot; ]]; then
+            echo -e &quot;$contig\t${cent_map[$contig]}&quot; &gt;&gt; &quot;$OUTPUT_FILE&quot;
+        else
+            echo -e &quot;$contig\tunknown&quot; &gt;&gt; &quot;$OUTPUT_FILE&quot;
+        fi
+    done &lt; /tmp/${SAMPLE}_all_contigs.tmp
+
+    rm -f /tmp/${SAMPLE}_*.tmp
+    TOTAL=$(wc -l &lt; &quot;$OUTPUT_FILE&quot; | awk &#x27;{print $1-1}&#x27;)
+    KNOWN=$(grep -v &quot;unknown&quot; &quot;$OUTPUT_FILE&quot; | wc -l | awk &#x27;{print $1-1}&#x27;)
+    UNKNOWN=$((TOTAL - KNOWN))
+
+    echo &quot;Sample $SAMPLE completed&quot;
+    echo &quot;Total contigs=$TOTAL | Annotated=$KNOWN | Unknown=$UNKNOWN&quot;
+    echo &quot;Output: $OUTPUT_FILE&quot;
+    echo &quot;----------------------------------------&quot;
+done
+
+echo &quot;All samples processed&quot;
+echo &quot;Results: $OUTPUT_DIR&quot;
+echo &quot;Output pattern: {sample}_merged_species.tsv&quot;
+echo &quot;Format: contig_name | species_annotation (tab-separated)&quot;</pre>
+<h3>S6.7 &nbsp;<code>summarize_priority_taxa.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+
+mkdir -p &quot;${P_PATH_1:?Set P_PATH_1}&quot;
+
+WHO_SPECIES=&quot;${P_WHO_SPECIES:?Set P_WHO_SPECIES}&quot;
+SAMPLE_DIR=&quot;${P_SAMPLE_DIR:?Set P_SAMPLE_DIR}&quot;
+
+for sample in &quot;${SAMPLE_DIR}&quot;/*_result.txt; do
+    sample_name=$(basename &quot;${sample}&quot; _result.txt)
+    temp_file=&quot;$(configured_path &quot;${P_TEMP_FILE:?Set P_TEMP_FILE}&quot; &quot;sample_name&quot; &quot;${sample_name}&quot;)&quot;
+    output_file=&quot;$(configured_path &quot;${P_OUTPUT_FILE:?Set P_OUTPUT_FILE}&quot; &quot;sample_name&quot; &quot;${sample_name}&quot;)&quot;
+
+    awk &#x27;
+    FNR==NR {
+        name = &quot;&quot;;
+        for (i=1; i&lt;=NF; i++) name = name &quot; &quot; $i;
+        name = substr(name, 2);
+        species[name] = 1;
+        next;
+    }
+    {
+        name = &quot;&quot;;
+        for (i=1; i&lt;NF; i++) name = name &quot; &quot; $i;
+        name = substr(name, 2);
+        if (name in species) print name, $NF;
+    }
+    &#x27; &quot;${WHO_SPECIES}&quot; &quot;${sample}&quot; &gt; &quot;${temp_file}&quot;
+
+    awk &#x27;
+    {
+        name = &quot;&quot;;
+        for (i=1; i&lt;NF; i++) name = name &quot; &quot; $i;
+        name = substr(name, 2);
+        sum[name] += $NF;
+    }
+    END {
+        for (n in sum) print n, sum[n];
+    }
+    &#x27; &quot;${temp_file}&quot; &gt; &quot;${output_file}&quot;
+
+    rm &quot;${temp_file}&quot;
+
+    echo &quot;Sample ${sample_name} completed: ${output_file}&quot;
+done</pre>
+<h3>S6.8 &nbsp;<code>extract_selected_taxa.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+set -euo pipefail
+
+TSV_FILE=&quot;${P_TSV_FILE:?Set P_TSV_FILE}&quot;
+FASTA_FILE=&quot;${P_FASTA_FILE:?Set P_FASTA_FILE}&quot;
+OUT_DIR=&quot;${P_OUT_DIR:?Set P_OUT_DIR}&quot;
+TARGET_SPECIES=(
+    &quot;Klebsiella pneumoniae&quot;
+    &quot;Escherichia coli&quot;
+    &quot;Acinetobacter baumannii&quot;
+)
+
+mkdir -p &quot;${OUT_DIR}&quot;
+echo &quot;Output directory: ${OUT_DIR}&quot;
+
+if [ ! -f &quot;${TSV_FILE}&quot; ]; then
+    echo &quot;ERROR: Missing TSV: ${TSV_FILE}&quot;
+    exit 1
+fi
+if [ ! -f &quot;${FASTA_FILE}&quot; ]; then
+    echo &quot;ERROR: Missing FASTA: ${FASTA_FILE}&quot;
+    exit 1
+fi
+echo &quot;Input files checked&quot;
+
+for species in &quot;${TARGET_SPECIES[@]}&quot;; do
+    echo &quot;Processing species: ${species}&quot;
+
+    contig_id=$(awk -F&#x27;\t&#x27; -v sp=&quot;${species}&quot; &#x27;$2 == sp {print $1; exit}&#x27; &quot;${TSV_FILE}&quot;)
+
+    if [ -z &quot;${contig_id}&quot; ]; then
+        echo &quot;WARNING: No matching contig in TSV; skipping&quot;
+        continue
+    fi
+    echo &quot;Contig ID: ${contig_id}&quot;
+
+    out_file=&quot;${OUT_DIR}/${species// /_}_${contig_id}.fasta&quot;
+
+    seqkit grep -n -p &quot;${contig_id}&quot; &quot;${FASTA_FILE}&quot; -o &quot;${out_file}&quot;
+
+    if [ -s &quot;${out_file}&quot; ]; then
+        echo &quot;Extracted sequence: ${out_file}&quot;
+    else
+        echo &quot;ERROR: Contig not found in FASTA&quot;
+    fi
+done
+
+echo -e &quot;\nResults saved in ${OUT_DIR}&quot;</pre>
+<h2 id="s7">S7 &nbsp;Functional gene annotation</h2>
+<p>Use BLASTP for functional annotation against reference protein databases. SARG screening uses identity of at least 80% and subject coverage of at least 70%; mobileOG-db screening uses identity of at least 80% and an alignment-length/query-length ratio of at least 70%. Supply the appropriate filtered annotation tables to downstream steps.</p>
+<h3>S7.1 &nbsp;<code>14_vfdb_search.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 3 ]] || { echo &quot;Usage: $0 PROTEINS VFDB_CORE_DB FILTERED_TSV&quot; &gt;&amp;2; exit 2; }
+blastp -query &quot;$1&quot; -db &quot;$2&quot; -evalue 1e-5 -num_threads &quot;${THREADS:-8}&quot; -outfmt &quot;6 qseqid sseqid pident qcovs evalue bitscore&quot; | awk -F&#x27;\t&#x27; &#x27;$3&gt;=50 &amp;&amp; $4&gt;=60 &amp;&amp; $5&lt;=1e-5&#x27; &gt; &quot;$3&quot;</pre>
+<h3>S7.2 &nbsp;<code>arg_protein_search.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+if [[ $# != 3 ]]; then echo &quot;Usage: $0 QUERY_PROTEINS SARG_DB_PREFIX RAW_HITS&quot; &gt;&amp;2; exit 2; fi
+blastp -query &quot;$1&quot; -db &quot;$2&quot; -out &quot;$3&quot; -evalue 1e-5 -max_target_seqs 1 \
+  -outfmt &#x27;6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore&#x27; \
+  -num_threads &quot;${THREADS:-50}&quot;</pre>
+<h3>S7.3 &nbsp;<code>filter_sarg_subject_coverage.py</code></h3><pre>#!/usr/bin/env python3
+
+
+import argparse, csv
+
+def lengths(path):
+    result={}; name=None
+    with open(path, encoding=&#x27;utf-8&#x27;) as handle:
+        for line in handle:
+            if line.startswith(&#x27;&gt;&#x27;):
+                name=line[1:].split()[0]
+                if name in result: raise ValueError(f&#x27;Duplicate reference ID: {name}&#x27;)
+                result[name]=0
+            elif name is not None: result[name]+=len(line.strip())
+    if not result: raise ValueError(&#x27;Empty reference FASTA&#x27;)
+    return result
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__)
+    for a in (&#x27;hits&#x27;,&#x27;reference-fasta&#x27;,&#x27;structure&#x27;,&#x27;filtered-hits&#x27;,&#x27;annotations&#x27;): p.add_argument(&#x27;--&#x27;+a,required=True)
+    p.add_argument(&#x27;--header&#x27;,action=&#x27;store_true&#x27;,help=&#x27;Add a header to the annotation output (legacy ARG-2.sh did not).&#x27;)
+    a=p.parse_args(); lens=lengths(a.reference_fasta); tax={}
+    with open(a.structure,encoding=&#x27;utf-8-sig&#x27;) as h:
+        rows=csv.reader(h,delimiter=&#x27;\t&#x27;); next(rows,None)
+        for r in rows:
+            if len(r)&gt;=4: tax[r[1]]=(r[2],r[3].split(&#x27;__&#x27;)[-1])
+    missing=passed=unknown=0
+    with open(a.hits,encoding=&#x27;utf-8&#x27;) as h, open(a.filtered_hits,&#x27;w&#x27;,encoding=&#x27;utf-8&#x27;) as fo, open(a.annotations,&#x27;w&#x27;,encoding=&#x27;utf-8&#x27;) as ao:
+        fw=csv.writer(fo,delimiter=&#x27;\t&#x27;,lineterminator=&#x27;\n&#x27;); aw=csv.writer(ao,delimiter=&#x27;\t&#x27;,lineterminator=&#x27;\n&#x27;)
+        if a.header: aw.writerow([&#x27;Tag&#x27;,&#x27;Type&#x27;,&#x27;Subtype&#x27;])
+        for r in csv.reader(h,delimiter=&#x27;\t&#x27;):
+            if not r: continue
+            if len(r)&lt;12: raise ValueError(&#x27;Expected 12 BLAST fields&#x27;)
+            n=lens.get(r[1],0)
+            if not n: missing+=1; continue
+            cov=100*(abs(int(r[9])-int(r[8]))+1)/n
+            if float(r[2])&gt;=80 and cov&gt;=70:
+                fw.writerow(r); t=tax.get(r[1],(&#x27;Unknown&#x27;,&#x27;Unknown&#x27;)); aw.writerow([r[0],*t]); passed+=1; unknown+=int(r[1] not in tax)
+    print(f&#x27;Passed={passed}; missing reference={missing}; unknown taxonomy={unknown}&#x27;)
+if __name__==&#x27;__main__&#x27;: main()</pre>
+<h3>S7.4 &nbsp;<code>extract_arg_contig_orfs.py</code></h3><pre>#!/usr/bin/env python3
+
+
+import os
+from collections import defaultdict
+
+
+SAMPLES = [line.strip() for line in open(os.environ[&quot;SAMPLE_LIST&quot;], encoding=&quot;utf-8&quot;) if line.strip()]
+BASE_DIR = os.environ[&quot;P_BASE_DIR&quot;]
+
+def get_contig_name(seq_id):
+
+
+    last_underscore = seq_id.rfind(&#x27;_&#x27;)
+    if last_underscore == -1:
+
+        return seq_id
+
+    return seq_id[:last_underscore]
+
+def main():
+    for sample in SAMPLES:
+        arg_file = os.path.join(BASE_DIR, sample, &quot;query_categories_simple.txt&quot;)
+        prodigal_file = os.path.join(BASE_DIR, sample, &quot;Prodigal&quot;, &quot;prodigal_proteins.faa&quot;)
+        output_file = os.path.join(BASE_DIR, sample, &quot;Prodigal&quot;, &quot;arg_contig_orfs.faa&quot;)
+
+
+        if not os.path.exists(arg_file):
+            print(f&quot;Missing ARG file for {sample}: {arg_file}&quot;)
+            continue
+        if not os.path.exists(prodigal_file):
+            print(f&quot;Missing Prodigal protein file for {sample}: {prodigal_file}&quot;)
+            continue
+
+
+        arg_contigs = set()
+        with open(arg_file, &#x27;r&#x27;) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith(&quot;Tag&quot;):
+                    continue
+                parts = line.split(&#x27;\t&#x27;)
+                seq_id = parts[0].strip()
+                contig = get_contig_name(seq_id)
+                arg_contigs.add(contig)
+
+        print(f&quot;\nSample {sample}: {len(arg_contigs)} ARG-carrying contigs&quot;)
+
+
+        extracted = 0
+        with open(prodigal_file, &#x27;r&#x27;) as fin, open(output_file, &#x27;w&#x27;) as fout:
+            write_flag = False
+            for line in fin:
+                if line.startswith(&#x27;&gt;&#x27;):
+
+                    seq_id = line.split()[0][1:]
+                    contig = get_contig_name(seq_id)
+                    if contig in arg_contigs:
+                        write_flag = True
+                        fout.write(line)
+                        extracted += 1
+                    else:
+                        write_flag = False
+                else:
+                    if write_flag:
+                        fout.write(line)
+
+        print(f&quot;Extracted {extracted} protein sequences: {output_file}&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    main()</pre>
+<h3>S7.5 &nbsp;<code>mobileog_protein_search.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+if [[ $# != 5 ]]; then echo &quot;Usage: $0 QUERY_PROTEINS MOBILEOG_DB_PREFIX RAW_HITS FILTERED_HITS CATEGORY_TABLE&quot; &gt;&amp;2; exit 2; fi
+blastp -query &quot;$1&quot; -db &quot;$2&quot; -out &quot;$3&quot; -evalue 1e-5 -max_target_seqs 1 \
+  -outfmt &#x27;6 qseqid sseqid pident length qlen slen evalue bitscore&#x27; -num_threads &quot;${THREADS:-70}&quot;
+awk -F &#x27;\t&#x27; &#x27;BEGIN {OFS=&quot;\t&quot;} NF&gt;=8 &amp;&amp; $5&gt;0 &amp;&amp; $3+0&gt;=80 &amp;&amp; $4/$5&gt;=0.7 &amp;&amp; $7+0&lt;=1e-5&#x27; &quot;$3&quot; &gt; &quot;$4&quot;
+awk -F &#x27;\t&#x27; &#x27;BEGIN {OFS=&quot;\t&quot;} {split($2,f,&quot;|&quot;); print $1,f[4],f[5]}&#x27; &quot;$4&quot; | sort -u &gt; &quot;$5&quot;</pre>
+<h3>S7.6 &nbsp;<code>16_acc_nr_annotation.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 3 ]] || { echo &quot;Usage: $0 ACC_PROTEINS NR_DB RAW_HITS&quot; &gt;&amp;2; exit 2; }
+blastp -query &quot;$1&quot; -db &quot;$2&quot; -num_threads &quot;${THREADS:-8}&quot; -outfmt &quot;6 qseqid sseqid pident qcovs evalue bitscore stitle&quot; -out &quot;$3&quot;</pre>
+<h2 id="s8">S8 &nbsp;ARG–MGE co-occurrence and genomic context</h2>
+<p>Analyze genes on the same contig and extract representative regions for visualization. The 400 bp padding and 4,000 bp midpoint-distance filter apply to representative-region display, not to the initial same-contig co-occurrence definition. The priority-taxon profiling scripts require the selected subtype list as input.</p>
+<h3>S8.1 &nbsp;<code>representative_arg_mge_regions.py</code></h3><pre>
+
+
+import os
+import re
+import pandas as pd
+
+import argparse
+from pathlib import Path
+p = argparse.ArgumentParser(description=&quot;Select representative ARG-MGE regions.&quot;)
+for field in (&quot;samples&quot;, &quot;arg-template&quot;, &quot;gff&quot;, &quot;mge-hits&quot;, &quot;virus&quot;, &quot;pathogen&quot;):
+    p.add_argument(&quot;--&quot;+field, required=True)
+for field in (&quot;genes-out&quot;, &quot;comparison12-out&quot;, &quot;comparison23-out&quot;): p.add_argument(&quot;--&quot;+field)
+p.add_argument(&quot;--arg-has-header&quot;, action=&quot;store_true&quot;, help=&quot;Use only if ARG files have headers; original script skipped first row.&quot;)
+p.add_argument(&quot;--mge-input&quot;, choices=[&quot;filtered&quot;, &quot;legacy-raw&quot;], required=True, help=&quot;Confirm input provenance. Filtered checks the original MGE thresholds; legacy-raw reproduces unfiltered reading.&quot;)
+p.add_argument(&quot;--mge-labels&quot;, choices=[&quot;category&quot;, &quot;gene&quot;], default=&quot;category&quot;, help=&quot;category: final.py; gene: sum.py/su.py naming logic.&quot;)
+p.add_argument(&quot;--all-gene-labels&quot;, help=&quot;Optional all-contig label TSV for descriptive co-occurrence counts.&quot;)
+p.add_argument(&quot;--labels-only&quot;, action=&quot;store_true&quot;, help=&quot;Export all gene labels without representative selection; requires --all-gene-labels.&quot;)
+p.add_argument(&quot;--pair&quot;, nargs=2, metavar=(&quot;ARG&quot;, &quot;MGE&quot;), help=&quot;Explicit archived shared pair; original selected an arbitrary set member.&quot;)
+a = p.parse_args()
+samples = [x.strip() for x in Path(a.samples).read_text(encoding=&quot;utf-8&quot;).splitlines() if x.strip()]
+gff_path, mge_path, virus_path, pathogen_path = a.gff, a.mge_hits, a.virus, a.pathogen
+
+
+FILTER_DISTANCE = 4000 
+
+print(&quot;Loading input files and indexing genes&quot;)
+
+df_virus = pd.read_csv(virus_path, sep=&quot;\t&quot;)
+virus_all_contigs = set(df_virus[&#x27;ContigID&#x27;].unique())
+
+col_names = [&#x27;contig_id&#x27;, &#x27;contig_id_short&#x27;, &#x27;kingdom&#x27;, &#x27;phylum&#x27;, &#x27;class&#x27;, &#x27;order&#x27;, &#x27;family&#x27;, &#x27;genus&#x27;, &#x27;species&#x27;]
+df_pathogen = pd.read_csv(pathogen_path, sep=&quot;\t&quot;, skiprows=1, names=col_names)
+bat_all_contigs = set(df_pathogen[&#x27;contig_id&#x27;].unique())
+
+arg_dict = {}
+for s in samples:
+    s_arg_path = a.arg_template.format(sample=s)
+    if not os.path.isfile(s_arg_path): raise FileNotFoundError(s_arg_path)
+    if os.path.exists(s_arg_path):
+        with open(s_arg_path, &#x27;r&#x27;) as f:
+            if a.arg_has_header: next(f, None) 
+            for line in f:
+                parts = line.strip().split(&#x27;\t&#x27;)
+                if len(parts) &gt;= 3:
+                    raw_arg_name = parts[1]
+                    subtype_name = raw_arg_name.split(&quot;__&quot;)[-1] if &quot;__&quot; in raw_arg_name else raw_arg_name
+                    arg_dict[f&quot;{s}_{parts[0]}&quot;] = subtype_name
+
+mge_dict = {}
+if not os.path.isfile(mge_path): raise FileNotFoundError(mge_path)
+if os.path.exists(mge_path):
+    with open(mge_path, &#x27;r&#x27;) as f:
+        for line in f:
+            if not line.strip(): continue
+            parts = line.strip().split(&#x27;\t&#x27;)
+            if len(parts) &lt; 2: continue
+            if a.mge_input == &quot;filtered&quot;:
+                if len(parts) &lt; 8: raise ValueError(&quot;Expected full 8-column mobileOG BLAST hits&quot;)
+                if not (float(parts[2]) &gt;= 80 and float(parts[4]) &gt; 0 and float(parts[3])/float(parts[4]) &gt;= 0.7 and float(parts[6]) &lt;= 1e-5): continue
+            
+            gene_id = parts[0]        
+            annotation = parts[1]     
+            anno_parts = annotation.split(&#x27;|&#x27;)
+            if len(anno_parts) &gt;= 5:
+                major_cat = anno_parts[3]  
+                sub_cat = anno_parts[4]    
+                
+                if &quot;conjugation&quot; in sub_cat.lower() or &quot;conjugation&quot; in major_cat.lower() or major_cat.lower() == &quot;transfer&quot;:
+                    refined_name = &quot;conjugation protein&quot;
+                elif &quot;transposon&quot; in sub_cat.lower() or &quot;transposase&quot; in sub_cat.lower() or &quot;transposon&quot; in major_cat.lower() or &quot;transposase&quot; in major_cat.lower():
+                    refined_name = &quot;transposase&quot;
+                elif &quot;phage&quot; in major_cat.lower() or &quot;phage&quot; in sub_cat.lower():
+                    refined_name = &quot;phage protein&quot;
+                elif &quot;integration&quot; in major_cat.lower() or &quot;excision&quot; in major_cat.lower():
+                    refined_name = &quot;integrase/recombinase&quot;
+                elif &quot;stability&quot; in major_cat.lower() or &quot;defense&quot; in major_cat.lower():
+                    refined_name = &quot;stability/defense protein&quot;
+                elif &quot;replication&quot; in major_cat.lower() or &quot;recombination&quot; in major_cat.lower():
+                    refined_name = &quot;replication/recombination protein&quot;
+                else:
+                    refined_name = &quot;MGE protein&quot;
+                
+                if a.mge_labels == &quot;gene&quot;:
+                    raw_name = anno_parts[1]
+                    if raw_name not in (&quot;NA:Keyword&quot;, &quot;NA&quot;):
+                        refined_name = raw_name
+                    elif &quot;conjugation&quot; in sub_cat or major_cat == &quot;transfer&quot;: refined_name = &quot;conjugation protein&quot;
+                    elif &quot;transposon&quot; in sub_cat or &quot;transposase&quot; in sub_cat: refined_name = &quot;transposase&quot;
+                    elif major_cat == &quot;phage&quot;: refined_name = &quot;phage protein&quot;
+                    elif major_cat == &quot;integration/excision&quot;: refined_name = &quot;integrase/recombinase&quot;
+                    else: refined_name = f&quot;{major_cat} protein&quot;.replace(&quot;/NA&quot;, &quot;&quot;)
+                mge_dict[gene_id] = refined_name
+
+contig_genes = {}
+if not os.path.isfile(gff_path): raise FileNotFoundError(gff_path)
+if os.path.exists(gff_path):
+    with open(gff_path, &#x27;r&#x27;) as f:
+        for line in f:
+            if line.startswith(&#x27;#&#x27;) or not line.strip(): continue
+            parts = line.strip().split(&#x27;\t&#x27;)
+            chrom = parts[0]
+            start, end = int(parts[3]), int(parts[4])
+            strand = &quot;1&quot; if parts[6] == &quot;+&quot; else &quot;-1&quot;
+            
+            gene_num_match = re.search(r&#x27;ID=([^;]+)&#x27;, parts[8])
+            if not gene_num_match: continue
+            gene_num = gene_num_match.group(1)
+            gene_suffix = gene_num.split(&#x27;_&#x27;)[-1]
+            gene_id = f&quot;{chrom}_{gene_suffix}&quot;
+            
+            if gene_id in arg_dict:
+                g_type, name, color = &quot;ARG&quot;, arg_dict[gene_id], &quot;#E41A1C&quot;
+            elif gene_id in mge_dict:
+                g_type, name, color = &quot;MGE&quot;, mge_dict[gene_id], &quot;#377EB8&quot;
+            else:
+                product_match = re.search(r&#x27;product=([^;]+)&#x27;, parts[8])
+                gene_name_match = re.search(r&#x27;gene=([^;]+)&#x27;, parts[8])
+                
+                extracted_name = &quot;&quot;
+                if gene_name_match:
+                    extracted_name = gene_name_match.group(1)
+                elif product_match:
+                    extracted_name = product_match.group(1)
+                
+                if extracted_name and &quot;hypothetical&quot; not in extracted_name.lower():
+                    g_type, name, color = &quot;other genes&quot;, extracted_name, &quot;#4DAF4A&quot;
+                else:
+                    g_type, name, color = &quot;hypothetical protein&quot;, &quot;hypothetical protein&quot;, &quot;#D9D9D9&quot;
+                
+            if chrom not in contig_genes:
+                contig_genes[chrom] = []
+            contig_genes[chrom].append({
+                &quot;name&quot;: name, &quot;start&quot;: start, &quot;end&quot;: end, 
+                &quot;strand&quot;: strand, &quot;col&quot;: color, &quot;type&quot;: g_type
+            })
+
+print(&quot;\nFinding shared ARG-MGE pairs across the three contig groups&quot;)
+
+if a.all_gene_labels:
+    pd.DataFrame([{&quot;contig&quot;:c, &quot;name&quot;:g[&quot;name&quot;], &quot;type&quot;:g[&quot;type&quot;]} for c, genes in contig_genes.items() for g in genes]).to_csv(a.all_gene_labels, sep=&quot;\t&quot;, index=False)
+
+if a.labels_only:
+    if not a.all_gene_labels: p.error(&quot;--labels-only requires --all-gene-labels&quot;)
+    raise SystemExit(0)
+if not a.pair or not all((a.genes_out,a.comparison12_out,a.comparison23_out)): p.error(&quot;--pair and three output paths required for representative region selection&quot;)
+
+virus_pool = {}
+bat_only_pool = {}
+env_only_pool = {}
+
+v_pairs = set()
+b_pairs = set()
+e_pairs = set()
+
+for chrom, genes in contig_genes.items():
+    is_virus = chrom in virus_all_contigs
+    is_bat = chrom in bat_all_contigs
+    
+    args_on_contig = set(g[&quot;name&quot;] for g in genes if g[&quot;type&quot;] == &quot;ARG&quot;)
+    mges_on_contig = set(g[&quot;name&quot;] for g in genes if g[&quot;type&quot;] == &quot;MGE&quot;)
+    
+    local_pairs = set((a, m) for a in args_on_contig for m in mges_on_contig)
+    
+    if not local_pairs: continue
+    
+    if is_virus:
+        virus_pool[chrom] = {&quot;genes&quot;: genes, &quot;pairs&quot;: local_pairs}
+        v_pairs.update(local_pairs)
+    elif not is_virus:
+        if is_bat:
+            bat_only_pool[chrom] = {&quot;genes&quot;: genes, &quot;pairs&quot;: local_pairs}
+            b_pairs.update(local_pairs)
+        else:
+            env_only_pool[chrom] = {&quot;genes&quot;: genes, &quot;pairs&quot;: local_pairs}
+            e_pairs.update(local_pairs)
+
+strictly_shared_pairs = v_pairs &amp; b_pairs &amp; e_pairs
+
+if not strictly_shared_pairs:
+    raise ValueError(&quot;No shared ARG-MGE pair was found across all three contig groups.&quot;)
+
+chosen_arg, chosen_mge = a.pair
+if (chosen_arg, chosen_mge) not in strictly_shared_pairs:
+    raise ValueError(&quot;Requested pair is not present in all three annotation-defined groups&quot;)
+target_combo = {chosen_arg, chosen_mge}
+
+print(&quot;Selected shared pair:&quot;)
+print(f&quot;ARG: {chosen_arg}&quot;)
+print(f&quot;MGE: {chosen_mge}&quot;)
+
+def find_strict_best_contig(pool, c_arg, c_mge):
+    best_chrom = None
+    min_span = float(&#x27;inf&#x27;)
+    for chrom, info in pool.items():
+        if (c_arg, c_mge) in info[&quot;pairs&quot;]:
+            pos = []
+            for g in info[&quot;genes&quot;]:
+                if g[&quot;name&quot;] in [c_arg, c_mge]: pos.extend([g[&quot;start&quot;], g[&quot;end&quot;]])
+            span = max(pos) - min(pos)
+            if span &lt; min_span:
+                min_span = span
+                best_chrom = chrom
+    return best_chrom
+
+s_v = find_strict_best_contig(virus_pool, chosen_arg, chosen_mge)
+s_b = find_strict_best_contig(bat_only_pool, chosen_arg, chosen_mge)
+s_e = find_strict_best_contig(env_only_pool, chosen_arg, chosen_mge)
+
+PAD_SIZE = 400
+def calc_real_len(pool, chrom, combo):
+    pos = [g[&quot;start&quot;] for g in pool[chrom][&quot;genes&quot;] if g[&quot;name&quot;] in combo] + [g[&quot;end&quot;] for g in pool[chrom][&quot;genes&quot;] if g[&quot;name&quot;] in combo]
+    return (max(pos) + PAD_SIZE) - max(1, min(pos) - PAD_SIZE)
+
+len_v = calc_real_len(virus_pool, s_v, target_combo)
+len_b = calc_real_len(bat_only_pool, s_b, target_combo)
+len_e = calc_real_len(env_only_pool, s_e, target_combo)
+
+order_list = sorted([
+    (s_v, virus_pool, len_v, &quot;Virus&quot;), 
+    (s_b, bat_only_pool, len_b, &quot;Bacterial_annotation&quot;), 
+    (s_e, env_only_pool, len_e, &quot;Other_unassigned&quot;)
+], key=lambda x: x[2])
+
+s1, p1, _, type1 = order_list[0]
+s2, p2, _, type2 = order_list[1]
+s3, p3, _, type3 = order_list[2]
+
+print(f&quot;\nSelected contigs:\n1. {s1} ({type1})\n2. {s2} ({type2})\n3. {s3} ({type3})&quot;)
+
+def get_original_window(pool, chrom, combo):
+    pos = [g[&quot;start&quot;] for g in pool[chrom][&quot;genes&quot;] if g[&quot;name&quot;] in combo] + [g[&quot;end&quot;] for g in pool[chrom][&quot;genes&quot;] if g[&quot;name&quot;] in combo]
+    return max(1, min(pos) - PAD_SIZE), max(pos) + PAD_SIZE
+
+w1_s, w1_e = get_original_window(p1, s1, target_combo)
+w2_s, w2_e = get_original_window(p2, s2, target_combo)
+w3_s, w3_e = get_original_window(p3, s3, target_combo)
+
+windows = {s1: (w1_s, w1_e), s2: (w2_s, w2_e), s3: (w3_s, w3_e)}
+
+transformed_genes = []
+for chrom, current_pool in [(s1, p1), (s2, p2), (s3, p3)]:
+    w_start, w_end = windows[chrom]
+    
+    arg_positions = [g[&quot;start&quot;] for g in current_pool[chrom][&quot;genes&quot;] if g[&quot;name&quot;] == chosen_arg] + \
+                    [g[&quot;end&quot;] for g in current_pool[chrom][&quot;genes&quot;] if g[&quot;name&quot;] == chosen_arg]
+    arg_center = int((min(arg_positions) + max(arg_positions)) / 2)
+
+    for g in current_pool[chrom][&quot;genes&quot;]:
+        if g[&quot;end&quot;] &gt;= w_start and g[&quot;start&quot;] &lt;= w_end:
+            gene_center = int((g[&quot;start&quot;] + g[&quot;end&quot;]) / 2)
+            
+            if abs(gene_center - arg_center) &gt; FILTER_DISTANCE:
+                continue 
+                
+            rel_start = max(1, g[&quot;start&quot;] - w_start)
+            rel_end = g[&quot;end&quot;] - w_start
+            transformed_genes.append([chrom, g[&quot;name&quot;], rel_start, rel_end, g[&quot;strand&quot;], g[&quot;col&quot;]])
+
+df_out = pd.DataFrame(transformed_genes, columns=[&#x27;contig&#x27;, &#x27;name&#x27;, &#x27;start&#x27;, &#x27;end&#x27;, &#x27;strand&#x27;, &#x27;col&#x27;])
+df_out.to_csv(a.genes_out, index=False)
+print(&quot;Representative gene-coordinate table written.&quot;)
+
+with open(a.comparison12_out, &quot;w&quot;) as f:
+    f.write(&quot;start1\tend1\tstart2\tend2\tcol\n&quot;)
+    w1_start, _ = windows[s1]
+    w2_start, _ = windows[s2]
+    for g1 in p1[s1][&quot;genes&quot;]:
+        if g1[&quot;name&quot;] in target_combo:
+            for g2 in p2[s2][&quot;genes&quot;]:
+                if g2[&quot;name&quot;] == g1[&quot;name&quot;]:
+                    r1_s, r1_e = g1[&quot;start&quot;] - w1_start, g1[&quot;end&quot;] - w1_start
+                    r2_s, r2_e = g2[&quot;start&quot;] - w2_start, g2[&quot;end&quot;] - w2_start
+                    line_color = &quot;#FFD2D2&quot; if g1[&quot;type&quot;] == &quot;ARG&quot; else &quot;#D2E4FF&quot;
+                    f.write(f&quot;{r1_s}\t{r1_e}\t{r2_s}\t{r2_e}\t{line_color}\n&quot;)
+
+with open(a.comparison23_out, &quot;w&quot;) as f:
+    f.write(&quot;start1\tend1\tstart2\tend2\tcol\n&quot;)
+    w2_start, _ = windows[s2]
+    w3_start, _ = windows[s3]
+    for g2 in p2[s2][&quot;genes&quot;]:
+        if g2[&quot;name&quot;] in target_combo:
+            for g3 in p3[s3][&quot;genes&quot;]:
+                if g3[&quot;name&quot;] == g2[&quot;name&quot;]:
+                    r2_s, r2_e = g2[&quot;start&quot;] - w2_start, g2[&quot;end&quot;] - w2_start
+                    r3_s, r3_e = g3[&quot;start&quot;] - w3_start, g3[&quot;end&quot;] - w3_start
+                    line_color = &quot;#FFD2D2&quot; if g2[&quot;type&quot;] == &quot;ARG&quot; else &quot;#D2E4FF&quot;
+                    f.write(f&quot;{r2_s}\t{r2_e}\t{r3_s}\t{r3_e}\t{line_color}\n&quot;)
+
+print(&quot;Shared-label comparison tables written; these are not sequence alignments.&quot;)</pre>
+<h3>S8.2 &nbsp;<code>arg_mge_cooccurrence.py</code></h3><pre>#!/usr/bin/env python3
+
+
+import argparse,csv
+from collections import defaultdict
+p=argparse.ArgumentParser(description=__doc__)
+p.add_argument(&#x27;--genes&#x27;,required=True); p.add_argument(&#x27;--arg&#x27;,required=True)
+p.add_argument(&#x27;--mge&#x27;,nargs=&#x27;+&#x27;,required=True); p.add_argument(&#x27;--output&#x27;,required=True)
+a=p.parse_args(); groups=defaultdict(lambda:{&#x27;ARG&#x27;:set(),&#x27;MGE&#x27;:set()})
+with open(a.genes,encoding=&#x27;utf-8-sig&#x27;) as h:
+    for r in csv.DictReader(h,delimiter=&#x27;\t&#x27;):
+        if r[&#x27;type&#x27;] in (&#x27;ARG&#x27;,&#x27;MGE&#x27;): groups[r[&#x27;contig&#x27;]][r[&#x27;type&#x27;]].add(r[&#x27;name&#x27;])
+selected=[g[&#x27;MGE&#x27;] for g in groups.values() if a.arg in g[&#x27;ARG&#x27;]]; n=len(selected)
+with open(a.output,&#x27;w&#x27;,encoding=&#x27;utf-8&#x27;) as h:
+    w=csv.writer(h,delimiter=&#x27;\t&#x27;,lineterminator=&#x27;\n&#x27;); w.writerow([&#x27;ARG&#x27;,&#x27;MGE_label&#x27;,&#x27;contigs_with_ARG&#x27;,&#x27;contigs_with_both&#x27;,&#x27;fraction&#x27;])
+    for label in a.mge:
+        k=sum(label in g for g in selected); w.writerow([a.arg,label,n,k,k/n if n else &#x27;NA&#x27;])
+    if len(a.mge)==2:
+        x,y=a.mge
+        for label,fn in [(&#x27;both&#x27;,lambda g:x in g and y in g),(&#x27;only:&#x27;+x,lambda g:x in g and y not in g),(&#x27;only:&#x27;+y,lambda g:y in g and x not in g),(&#x27;neither&#x27;,lambda g:x not in g and y not in g)]:
+            k=sum(fn(g) for g in selected); w.writerow([a.arg,label,n,k,k/n if n else &#x27;NA&#x27;])</pre>
+<h3>S8.3 &nbsp;<code>arg_neighbor_distances.py</code></h3><pre>#!/usr/bin/env python3
+
+
+import argparse,csv
+from collections import defaultdict
+p=argparse.ArgumentParser(description=__doc__); p.add_argument(&#x27;--genes&#x27;,required=True); p.add_argument(&#x27;--arg&#x27;,required=True); p.add_argument(&#x27;--output&#x27;,required=True); a=p.parse_args()
+g=defaultdict(list)
+with open(a.genes,encoding=&#x27;utf-8-sig&#x27;) as f:
+    for r in csv.DictReader(f): g[r[&#x27;contig&#x27;]].append(r)
+with open(a.output,&#x27;w&#x27;,encoding=&#x27;utf-8&#x27;) as f:
+    w=csv.writer(f,delimiter=&#x27;\t&#x27;,lineterminator=&#x27;\n&#x27;); w.writerow([&#x27;contig&#x27;,&#x27;ARG&#x27;,&#x27;neighbor&#x27;,&#x27;neighbor_strand&#x27;,&#x27;signed_midpoint_distance_bp&#x27;])
+    for contig,rows in g.items():
+        for i,r in enumerate(rows):
+            if r[&#x27;name&#x27;]!=a.arg: continue
+            mid=(int(r[&#x27;start&#x27;])+int(r[&#x27;end&#x27;]))/2
+            for j,t in enumerate(rows):
+                if i!=j: w.writerow([contig,r[&#x27;name&#x27;],t[&#x27;name&#x27;],t[&#x27;strand&#x27;],(int(t[&#x27;start&#x27;])+int(t[&#x27;end&#x27;]))/2-mid])</pre>
+<h3>S8.4 &nbsp;<code>priority_taxa_arg_profiles.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+set -euo pipefail
+
+mapfile -t SAMPLES &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+PATHOGEN_TEMPLATE=&quot;${P_PATHOGEN_TEMPLATE:?Set P_PATHOGEN_TEMPLATE}&quot;
+ARG_TEMPLATE=&quot;${P_ARG_TEMPLATE:?Set P_ARG_TEMPLATE}&quot;
+OUTPUT_ROOT=&quot;${P_OUTPUT_ROOT:?Set P_OUTPUT_ROOT}&quot;
+BATCH_LOG=&quot;${OUTPUT_ROOT}/batch_process.log&quot;
+
+mkdir -p &quot;${OUTPUT_ROOT}&quot;
+&gt; &quot;${BATCH_LOG}&quot;
+
+TOTAL_SAMPLES=${#SAMPLES[@]}
+SUCCESS_SAMPLES=0
+FAIL_SAMPLES=0
+FAILED_SAMPLE_LIST=&quot;${OUTPUT_ROOT}/failed_samples.txt&quot;
+&gt; &quot;${FAILED_SAMPLE_LIST}&quot;
+
+echo &quot;========================================&quot; | tee -a &quot;${BATCH_LOG}&quot;
+echo &quot;Processing ${TOTAL_SAMPLES} samples&quot; | tee -a &quot;${BATCH_LOG}&quot;
+echo &quot;Samples: ${SAMPLES[*]}&quot; | tee -a &quot;${BATCH_LOG}&quot;
+echo &quot;Output directory: ${OUTPUT_ROOT}&quot; | tee -a &quot;${BATCH_LOG}&quot;
+echo &quot;========================================&quot; | tee -a &quot;${BATCH_LOG}&quot;
+
+for SAMPLE in &quot;${SAMPLES[@]}&quot;; do
+    echo -e &quot;\n----------------------------------------&quot; | tee -a &quot;${BATCH_LOG}&quot;
+    echo &quot;Processing ${SAMPLE}&quot; | tee -a &quot;${BATCH_LOG}&quot;
+
+    PATHOGEN_FILE=$(echo &quot;${PATHOGEN_TEMPLATE}&quot; | sed &quot;s/{SAMPLE}/${SAMPLE}/g&quot;)
+    ARG_FILE=$(echo &quot;${ARG_TEMPLATE}&quot; | sed &quot;s/{SAMPLE}/${SAMPLE}/g&quot;)
+
+    SAMPLE_OUT_DIR=&quot;${OUTPUT_ROOT}/${SAMPLE}&quot;
+    mkdir -p &quot;${SAMPLE_OUT_DIR}&quot;
+
+    DETAIL_FILE=&quot;${SAMPLE_OUT_DIR}/${SAMPLE}_detail_mapping.txt&quot;
+    UNIQUE_ALL_FILE=&quot;${SAMPLE_OUT_DIR}/${SAMPLE}_unique_all.txt&quot;
+    UNIQUE_MAJOR_FILE=&quot;${SAMPLE_OUT_DIR}/${SAMPLE}_unique_major.txt&quot;
+    UNIQUE_MINOR_FILE=&quot;${SAMPLE_OUT_DIR}/${SAMPLE}_unique_minor.txt&quot;
+
+    FILE_MISSING=0
+    if [[ ! -f &quot;${PATHOGEN_FILE}&quot; ]]; then
+        ERR_MSG=&quot;Missing pathogen file: ${PATHOGEN_FILE}&quot;
+        echo &quot;ERROR: ${ERR_MSG}&quot; | tee -a &quot;${BATCH_LOG}&quot;
+        echo &quot;${SAMPLE}: ${ERR_MSG}&quot; &gt;&gt; &quot;${FAILED_SAMPLE_LIST}&quot;
+        FILE_MISSING=1
+    fi
+    if [[ ! -f &quot;${ARG_FILE}&quot; ]]; then
+        ERR_MSG=&quot;Missing ARG file: ${ARG_FILE}&quot;
+        echo &quot;ERROR: ${ERR_MSG}&quot; | tee -a &quot;${BATCH_LOG}&quot;
+        echo &quot;${SAMPLE}: ${ERR_MSG}&quot; &gt;&gt; &quot;${FAILED_SAMPLE_LIST}&quot;
+        FILE_MISSING=1
+    fi
+    if [[ ${FILE_MISSING} -eq 1 ]]; then
+        FAIL_SAMPLES=$((FAIL_SAMPLES + 1))
+        continue
+    fi
+
+    echo &quot;Matching contigs for ${SAMPLE}...&quot; | tee -a &quot;${BATCH_LOG}&quot;
+    awk -F&#x27;\t&#x27; &#x27;
+        NR == FNR {
+            if (NR&gt;1 &amp;&amp; $1!=&quot;&quot; &amp;&amp; $1!~ /^contig/) {
+                contig = $1
+                species = $2
+                contig_to_species[contig] = species
+            }
+            next
+        }
+
+        NR&gt;1 &amp;&amp; $1!=&quot;&quot; &amp;&amp; $1!~ /^Tag/ {
+            gene_name = $1
+            contig_arg = gene_name
+            sub(/_[^_]*$/, &quot;&quot;, contig_arg)
+
+            major = $2
+            minor = $3
+
+            if (contig_arg in contig_to_species) {
+                species = contig_to_species[contig_arg]
+                print gene_name &quot;\t&quot; contig_arg &quot;\t&quot; species &quot;\t&quot; major &quot;\t&quot; minor &gt;&gt; &quot;&#x27;&quot;${DETAIL_FILE}&quot;&#x27;&quot;
+
+                unique_all[species &quot;\t&quot; major &quot;\t&quot; minor] = 1
+                unique_major[species &quot;\t&quot; major] = 1
+                unique_minor[species &quot;\t&quot; minor] = 1
+            }
+        }
+
+        END {
+            print &quot;species\tmajor_subtype\tminor_subtype&quot; &gt; &quot;&#x27;&quot;${UNIQUE_ALL_FILE}&quot;&#x27;&quot;
+            for (key in unique_all) {
+                print key &gt; &quot;&#x27;&quot;${UNIQUE_ALL_FILE}&quot;&#x27;&quot;
+            }
+
+            print &quot;species\tmajor_subtype&quot; &gt; &quot;&#x27;&quot;${UNIQUE_MAJOR_FILE}&quot;&#x27;&quot;
+            for (key in unique_major) {
+                print key &gt; &quot;&#x27;&quot;${UNIQUE_MAJOR_FILE}&quot;&#x27;&quot;
+            }
+
+            print &quot;species\tminor_subtype&quot; &gt; &quot;&#x27;&quot;${UNIQUE_MINOR_FILE}&quot;&#x27;&quot;
+            for (key in unique_minor) {
+                print key &gt; &quot;&#x27;&quot;${UNIQUE_MINOR_FILE}&quot;&#x27;&quot;
+            }
+        }
+    &#x27; &quot;${PATHOGEN_FILE}&quot; &quot;${ARG_FILE}&quot;
+
+    DETAIL_ROWS=$(wc -l &lt; &quot;${DETAIL_FILE}&quot; 2&gt;/dev/null || echo 0)
+    ALL_COUNT=$(wc -l &lt; &quot;${UNIQUE_ALL_FILE}&quot; 2&gt;/dev/null || echo 0)
+    MAJOR_COUNT=$(wc -l &lt; &quot;${UNIQUE_MAJOR_FILE}&quot; 2&gt;/dev/null || echo 0)
+    MINOR_COUNT=$(wc -l &lt; &quot;${UNIQUE_MINOR_FILE}&quot; 2&gt;/dev/null || echo 0)
+
+    echo &quot;${SAMPLE} completed&quot; | tee -a &quot;${BATCH_LOG}&quot;
+    echo &quot;Detailed matches: ${DETAIL_ROWS}&quot; | tee -a &quot;${BATCH_LOG}&quot;
+    echo &quot;Unique pathogen-major-minor combinations: $((ALL_COUNT - 1))&quot; | tee -a &quot;${BATCH_LOG}&quot;
+    echo &quot;Unique pathogen-major combinations: $((MAJOR_COUNT - 1))&quot; | tee -a &quot;${BATCH_LOG}&quot;
+    echo &quot;Unique pathogen-minor combinations: $((MINOR_COUNT - 1))&quot; | tee -a &quot;${BATCH_LOG}&quot;
+
+    SUCCESS_SAMPLES=$((SUCCESS_SAMPLES + 1))
+done
+
+echo -e &quot;\n========================================&quot; | tee -a &quot;${BATCH_LOG}&quot;
+echo &quot;Batch summary:&quot; | tee -a &quot;${BATCH_LOG}&quot;
+echo &quot;Total samples: ${TOTAL_SAMPLES}&quot; | tee -a &quot;${BATCH_LOG}&quot;
+echo &quot;Successful: ${SUCCESS_SAMPLES}&quot; | tee -a &quot;${BATCH_LOG}&quot;
+echo &quot;Failed: ${FAIL_SAMPLES}&quot; | tee -a &quot;${BATCH_LOG}&quot;
+if [[ ${FAIL_SAMPLES} -gt 0 ]]; then
+    echo &quot;Failed samples: $(cat &quot;${FAILED_SAMPLE_LIST}&quot; | cut -d&#x27;:&#x27; -f1 | tr &#x27;\n&#x27; &#x27; &#x27;)&quot; | tee -a &quot;${BATCH_LOG}&quot;
+fi
+echo &quot;Results: ${OUTPUT_ROOT}&quot; | tee -a &quot;${BATCH_LOG}&quot;
+echo &quot;Batch log: ${BATCH_LOG}&quot; | tee -a &quot;${BATCH_LOG}&quot;
+echo &quot;========================================&quot; | tee -a &quot;${BATCH_LOG}&quot;
+
+FIRST_SAMPLE=&quot;${SAMPLES[0]}&quot;
+if [[ -d &quot;${OUTPUT_ROOT}/${FIRST_SAMPLE}&quot; ]]; then
+    echo -e &quot;\nFirst five deduplicated rows for ${FIRST_SAMPLE}&quot;
+    echo -e &quot;Unique pathogen-major combinations:&quot;
+    head -5 &quot;${OUTPUT_ROOT}/${FIRST_SAMPLE}/${FIRST_SAMPLE}_unique_major.txt&quot;
+    echo -e &quot;\nUnique pathogen-minor combinations:&quot;
+    head -5 &quot;${OUTPUT_ROOT}/${FIRST_SAMPLE}/${FIRST_SAMPLE}_unique_minor.txt&quot;
+fi</pre>
+<h3>S8.5 &nbsp;<code>filter_priority_arg_profiles.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+set -e
+
+echo -e &quot;\n========================================&quot;
+echo &quot;Checking sample results&quot;
+echo &quot;========================================&quot;
+merged_all=&quot;${P_MERGED_ALL:?Set P_MERGED_ALL}&quot;
+validation_report=&quot;${P_VALIDATION_REPORT:?Set P_VALIDATION_REPORT}&quot;
+
+&gt; &quot;$validation_report&quot;
+
+if [ ! -f &quot;$merged_all&quot; ]; then
+    echo &quot;ERROR: Missing merged file ${merged_all}&quot;
+    exit 1
+fi
+
+merged_lines=$(wc -l &lt; &quot;$merged_all&quot;)
+echo -e &quot;Merged rows: ${merged_lines}\n&quot;
+echo -e &quot;Sample result checks&quot; &gt;&gt; &quot;$validation_report&quot;
+echo &quot;Merged rows: ${merged_lines}&quot; &gt;&gt; &quot;$validation_report&quot;
+
+if [ &quot;$merged_lines&quot; -eq 0 ]; then
+    echo &quot;WARNING: Merged file is empty&quot; &gt;&gt; &quot;$validation_report&quot;
+    echo &quot;Merged file is empty; stopping&quot;
+    exit 1
+else
+    echo &quot;Filtering merged data...&quot;
+    echo &quot;First three merged rows:&quot; &gt;&gt; &quot;$validation_report&quot;
+    head -3 &quot;$merged_all&quot; &gt;&gt; &quot;$validation_report&quot;
+fi
+
+echo -e &quot;\n========================================&quot;
+echo &quot;Filtering WHO priority pathogens by exact case-sensitive match&quot;
+echo &quot;========================================&quot;
+WHO_SPECIES=&quot;${P_WHO_SPECIES:?Set P_WHO_SPECIES}&quot;
+who_unique=&quot;${P_WHO_UNIQUE:?Set P_WHO_UNIQUE}&quot;
+filtered_species=&quot;${P_FILTERED_SPECIES:?Set P_FILTERED_SPECIES}&quot;
+
+sort -u &quot;$WHO_SPECIES&quot; &gt; &quot;$who_unique&quot;
+
+awk -F &#x27;\t&#x27; &#x27;
+    BEGIN {OFS = &quot;\t&quot;}
+    NR == FNR {
+        species[$0] = 1;
+        next
+    }
+    {
+        if ($2 in species) {
+            print $2, $3, $4, $5;
+        }
+    }
+&#x27; &quot;$who_unique&quot; &quot;$merged_all&quot; &gt; &quot;$filtered_species&quot;
+
+species_lines=$(wc -l &lt; &quot;$filtered_species&quot;)
+echo -e &quot;WHO-filtered rows: ${species_lines}\n&quot;
+echo -e &quot;WHO pathogen filtering&quot; &gt;&gt; &quot;$validation_report&quot;
+echo &quot;Filtered rows: ${species_lines}&quot; &gt;&gt; &quot;$validation_report&quot;
+
+if [ &quot;$species_lines&quot; -eq 0 ]; then
+    echo &quot;No WHO pathogen matches&quot; &gt;&gt; &quot;$validation_report&quot;
+    echo &quot;No WHO pathogen matches; stopping&quot;
+    exit 1
+else
+    echo &quot;Matched WHO pathogen rows: ${species_lines}&quot;
+    echo &quot;First three WHO-filtered rows:&quot;
+    head -3 &quot;$filtered_species&quot;
+fi
+
+echo -e &quot;\n========================================&quot;
+echo &quot;Filtering top 25 subtypes by exact case-sensitive match&quot;
+echo &quot;========================================&quot;
+TOP25_SUBTYPE=&quot;${P_TOP25_SUBTYPE:?Set P_TOP25_SUBTYPE}&quot;
+top25_unique=&quot;${P_TOP25_UNIQUE:?Set P_TOP25_UNIQUE}&quot;
+filtered_final=&quot;${P_FILTERED_FINAL:?Set P_FILTERED_FINAL}&quot;
+
+awk -F &#x27;\t&#x27; &#x27;{print $1}&#x27; &quot;$TOP25_SUBTYPE&quot; | sort -u &gt; &quot;$top25_unique&quot;
+
+awk -F &#x27;\t&#x27; &#x27;
+    BEGIN {OFS = &quot;\t&quot;}
+    NR == FNR {
+        subtypes[$0] = 1;
+        next
+    }
+    {
+        if ($3 in subtypes) {
+            print $0;
+        }
+    }
+&#x27; &quot;$top25_unique&quot; &quot;$filtered_species&quot; &gt; &quot;$filtered_final&quot;
+
+final_lines=$(wc -l &lt; &quot;$filtered_final&quot;)
+echo -e &quot;Top 25 filtered rows: ${final_lines}\n&quot;
+echo -e &quot;Top 25 subtype filtering&quot; &gt;&gt; &quot;$validation_report&quot;
+echo &quot;Final rows: ${final_lines}&quot; &gt;&gt; &quot;$validation_report&quot;
+
+if [ &quot;$final_lines&quot; -gt 0 ]; then
+    echo &quot;Matched top 25 subtype rows: ${final_lines}&quot;
+    echo -e &quot;First five final rows (four columns):\n&quot;
+    head -5 &quot;$filtered_final&quot;
+else
+    echo &quot;No top 25 subtype matches&quot;
+    echo &quot;No top 25 subtype matches&quot; &gt;&gt; &quot;$validation_report&quot;
+fi
+
+echo -e &quot;\n========================================&quot;
+echo &quot;Checking format and cleaning temporary files&quot;
+echo &quot;========================================&quot;
+wrong_col_lines=$(awk -F &#x27;\t&#x27; &#x27;NF!=4&#x27; &quot;$filtered_final&quot; | wc -l)
+echo -e &quot;Column count check&quot; &gt;&gt; &quot;$validation_report&quot;
+if [ &quot;$wrong_col_lines&quot; -eq 0 ]; then
+    echo &quot;All final rows have four columns&quot; &gt;&gt; &quot;$validation_report&quot;
+    echo &quot;Final format check passed&quot;
+else
+    echo &quot;Rows with incorrect column count: ${wrong_col_lines}&quot; &gt;&gt; &quot;$validation_report&quot;
+    echo &quot;Rows with incorrect column count: ${wrong_col_lines}&quot;
+fi
+
+rm -f &quot;$who_unique&quot; &quot;$top25_unique&quot;
+echo &quot;Temporary files removed&quot;
+
+echo -e &quot;\n========================================&quot;
+echo &quot;Filtering complete&quot;
+echo &quot;========================================&quot;
+echo -e &quot;Output files in ${P_PATH_1:?Set P_PATH_1}:&quot;
+echo &quot;1. WHO-filtered results: filtered_who_species.txt&quot;
+echo &quot;2. Final WHO and top 25 results: filtered_final.txt&quot;
+echo -e &quot;\nValidation report: $validation_report&quot;
+echo -e &quot;\nValidation summary:&quot;
+grep -Ei &quot;warning|no .*matches|incorrect column count|four columns|matched&quot; &quot;$validation_report&quot; | tail -n 5</pre>
+<h2 id="s9">S9 &nbsp;Host prediction and cross-host sequence sharing</h2>
+<p>Predict viral microbial hosts and map public short reads against the supplied viral reference sequences. Mapping and co-detection do not demonstrate direct transmission. The host-by-taxon detection tables required by the following section must be supplied separately.</p>
+<h3>S9.1 &nbsp;<code>17_cherry.sh</code></h3><pre>#!/usr/bin/env bash
+
+set -euo pipefail
+[[ $# == 3 ]] || { echo &quot;Usage: $0 CONTIGS PHABOX_DATABASE OUTPUT_DIRECTORY&quot; &gt;&amp;2; exit 2; }
+phabox2 --task cherry --contigs &quot;$1&quot; --dbdir &quot;$2&quot; --outpth &quot;$3&quot; --threads &quot;${THREADS:-8}&quot;</pre>
+<h3>S9.2 &nbsp;<code>map_public_reads_minimap.sh</code></h3><pre>#!/usr/bin/env bash
+
+if [[ -n &quot;${ANALYSIS_CONFIG:-}&quot; ]]; then source &quot;$ANALYSIS_CONFIG&quot;; fi
+configured_path() {
+    local value=&quot;$1&quot;; shift
+    while (($#)); do local name=&quot;$1&quot; replacement=&quot;$2&quot;; shift 2; value=&quot;${value//\{$name\}/$replacement}&quot;; done
+    printf &#x27;%s&#x27; &quot;$value&quot;
+}
+REF_FA=&quot;${P_REF_FA:?Set P_REF_FA}&quot;
+MAIN_OUT_DIR=&quot;${P_MAIN_OUT_DIR:?Set P_MAIN_OUT_DIR}&quot;
+mkdir -p &quot;${MAIN_OUT_DIR}&quot;
+
+mapfile -t SAMPLES &lt; &quot;${SAMPLE_LIST:?Set SAMPLE_LIST}&quot;
+
+REF_INDEX=&quot;${MAIN_OUT_DIR}/viral_family_sequences_fixed.mmi&quot;
+if [ ! -f &quot;${REF_INDEX}&quot; ]; then
+    echo &quot;[$(date)] Building reference index...&quot;
+    minimap2 -d &quot;${REF_INDEX}&quot; &quot;${REF_FA}&quot;
+fi
+
+for SAMPLE in &quot;${SAMPLES[@]}&quot;; do
+    SAMPLE_DATA_DIR=&quot;$(configured_path &quot;${P_SAMPLE_DATA_DIR:?Set P_SAMPLE_DATA_DIR}&quot; &quot;SAMPLE&quot; &quot;${SAMPLE}&quot;)&quot;
+    SAMPLE_OUT_DIR=&quot;${MAIN_OUT_DIR}/${SAMPLE}&quot;
+    mkdir -p &quot;${SAMPLE_OUT_DIR}&quot;
+    SAMPLE_LOG=&quot;${SAMPLE_OUT_DIR}/${SAMPLE}_batch_mapping.log&quot;
+    echo &quot;[$(date)] Processing sample: ${SAMPLE}&quot; &gt; &quot;${SAMPLE_LOG}&quot;
+    echo &quot;Sample data directory: ${SAMPLE_DATA_DIR}&quot; &gt;&gt; &quot;${SAMPLE_LOG}&quot;
+
+    if [ ! -d &quot;${SAMPLE_DATA_DIR}&quot; ]; then
+        echo &quot;Missing sample directory for ${SAMPLE}: ${SAMPLE_DATA_DIR}&quot; | tee -a &quot;${SAMPLE_LOG}&quot;
+        continue
+    fi
+
+    R1_FILES=(&quot;${SAMPLE_DATA_DIR}&quot;/*_1.clean.fq.gz)
+    if [ ! -f &quot;${R1_FILES[0]}&quot; ]; then
+        echo &quot;No R1 files for ${SAMPLE}; skipping&quot; | tee -a &quot;${SAMPLE_LOG}&quot;
+        continue
+    fi
+
+    for R1 in &quot;${R1_FILES[@]}&quot;; do
+        SRR_ID=$(basename &quot;${R1}&quot; _1.clean.fq.gz)
+        R2=&quot;${SAMPLE_DATA_DIR}/${SRR_ID}_2.clean.fq.gz&quot;
+
+        if [ ! -f &quot;${R2}&quot; ]; then
+            echo &quot;Missing R2 for ${SRR_ID}: ${R2}; skipping pair&quot; | tee -a &quot;${SAMPLE_LOG}&quot;
+            continue
+        fi
+
+        SRR_PAF=&quot;${SAMPLE_OUT_DIR}/${SRR_ID}_viral_mapping.paf&quot;
+        echo &quot;[$(date)] Processing ${SRR_ID}: R1=${R1}, R2=${R2}&quot; | tee -a &quot;${SAMPLE_LOG}&quot;
+
+        minimap2 -x sr -t 8 &quot;${REF_INDEX}&quot; &quot;${R1}&quot; &quot;${R2}&quot; &gt; &quot;${SRR_PAF}&quot; 2&gt;&gt; &quot;${SAMPLE_LOG}&quot;
+
+        PAF_LINES=$(wc -l &quot;${SRR_PAF}&quot; | awk &#x27;{print $1}&#x27;)
+        echo &quot;[$(date)] ${SRR_ID} completed; PAF rows: ${PAF_LINES}&quot; | tee -a &quot;${SAMPLE_LOG}&quot;
+    done
+
+    MERGED_PAF=&quot;${SAMPLE_OUT_DIR}/${SAMPLE}_all_merged.paf&quot;
+    cat &quot;${SAMPLE_OUT_DIR}&quot;/*_viral_mapping.paf &gt; &quot;${MERGED_PAF}&quot; 2&gt;/dev/null
+    if [ -f &quot;${MERGED_PAF}&quot; ]; then
+        TOTAL_LINES=$(wc -l &quot;${MERGED_PAF}&quot; | awk &#x27;{print $1}&#x27;)
+        echo &quot;[$(date)] ${SAMPLE} completed; merged PAF rows: ${TOTAL_LINES}&quot; | tee -a &quot;${SAMPLE_LOG}&quot;
+    fi
+
+    echo &quot;Sample ${SAMPLE} completed: ${SAMPLE_OUT_DIR}&quot;
+done
+
+echo &quot;[$(date)] All samples processed&quot;</pre>
+<h2 id="s10">S10 &nbsp;Figure 6 network statistical analysis</h2>
+<p>Construct binary incidence matrices from positive detection frequencies and evaluate Barber bipartite modularity against a fixed–fixed Curveball null model. Use 999 randomized networks, 100 optimization initializations per network, 30 trade attempts per host row, and seed 20261121. The procedure preserves the row and column sums of the binary matrix and reports the one-sided empirical probability. A matrix without degree-preserving alternatives is reported descriptively. The viral input requires Species, Viral_Family and Frequency columns; the bacterial input requires Wild_Animal, WHO_Pathogen and Frequency. Supply the original network input tables or an equivalent binary edge table.</p>
+<h3>Execution</h3><pre>python fixed_degree_null.py --mode viral --input "$VIRAL_NETWORK_TSV" \
+    --out "$VIRAL_OUTPUT" --n-null 999 --starts 100 \
+    --trades-per-row 30 --seed 20261121 --save-every 20 --resume
+
+python fixed_degree_null.py --mode bacterial --input "$BACTERIAL_NETWORK_TSV" \
+    --out "$BACTERIAL_OUTPUT" --n-null 999 --starts 100 \
+    --trades-per-row 30 --seed 20261121 --save-every 20 --resume</pre>
+<h3>S10.1 &nbsp;<code>fixed_degree_null.py</code></h3><pre>#!/usr/bin/env python3
+
+
+from __future__ import annotations
+import argparse
+import csv
+import hashlib
+import json
+import math
+import os
+import platform
+import sys
+import time
+from pathlib import Path
+
+import numpy as np
+from numba import njit
+
+
+@njit(cache=True)
+def set_numba_seed(s):
+    np.random.seed(s)
+
+
+@njit(cache=True)
+def curveball_shuffle_inplace(mat, trades):
+
+    nr, nc = mat.shape
+    a = np.empty(nc, np.int64)
+    b = np.empty(nc, np.int64)
+    mix = np.empty(nc, np.int64)
+    accepted = 0
+    for _ in range(trades):
+        i = np.random.randint(nr)
+        j = np.random.randint(nr - 1)
+        if j &gt;= i:
+            j += 1
+        n1 = 0
+        n2 = 0
+        for c in range(nc):
+            if mat[i, c] and not mat[j, c]:
+                a[n1] = c
+                n1 += 1
+            elif mat[j, c] and not mat[i, c]:
+                b[n2] = c
+                n2 += 1
+        if n1 == 0 or n2 == 0:
+            continue
+        accepted += 1
+        n = n1 + n2
+        for t in range(n1):
+            mix[t] = a[t]
+        for t in range(n2):
+            mix[n1 + t] = b[t]
+        for p in range(n - 1, 0, -1):
+            q = np.random.randint(p + 1)
+            tmp = mix[p]
+            mix[p] = mix[q]
+            mix[q] = tmp
+        for p in range(n):
+            c = mix[p]
+            if p &lt; n1:
+                mat[i, c] = 1
+                mat[j, c] = 0
+            else:
+                mat[i, c] = 0
+                mat[j, c] = 1
+    return accepted
+
+
+@njit(cache=True)
+def optimize_barber_modularity(M, restarts, seed, maxpasses=40):
+
+
+    np.random.seed(seed)
+    nr, nc = M.shape
+    n = nr + nc
+    m = np.float64(M.sum())
+    rowdeg = M.sum(axis=1)
+    coldeg = M.sum(axis=0)
+    B = np.empty((nr, nc), np.float64)
+    for r in range(nr):
+        for c in range(nc):
+            B[r, c] = M[r, c] - (rowdeg[r] * coldeg[c]) / m
+
+    scores = np.empty(2*n, np.float64)
+    counts = np.empty(2*n, np.int64)
+    order = np.arange(n)
+    best_q = -2.
+    bestlabels = np.empty(n, np.int64)
+    for start in range(restarts):
+        labels = np.empty(n, np.int64)
+        if start == 0:
+            for v in range(n):
+                labels[v] = v
+        else:
+            ngroups = max(2, min(n, 8 + (start * 7) % 35))
+            for v in range(n):
+                labels[v] = np.random.randint(ngroups)
+        counts[:] = 0
+        for v in range(n):
+            counts[labels[v]] += 1
+
+        for _ in range(maxpasses):
+            np.random.shuffle(order)
+            changed = False
+            for x in range(n):
+                v = order[x]
+                scores[:] = 0.0
+                if v &lt; nr:
+                    for c in range(nc):
+                        scores[labels[nr+c]] += B[v, c]
+                    ostart, ostop = nr, n
+                else:
+                    col = v - nr
+                    for r in range(nr):
+                        scores[labels[r]] += B[r, col]
+                    ostart, ostop = 0, nr
+                old = labels[v]
+                oldvalue = scores[old]
+                best = oldvalue
+                chosen = old
+                for j in range(ostart, ostop):
+                    g = labels[j]
+                    if scores[g] &gt; best + 1e-12:
+                        best = scores[g]
+                        chosen = g
+
+
+                if best &lt; -1e-12:
+                    for g in range(2*n):
+                        if counts[g] == 0:
+                            chosen = g
+                            best = 0.0
+                            break
+                if chosen != old and best &gt; oldvalue + 1e-12:
+                    labels[v] = chosen
+                    counts[old] -= 1
+                    counts[chosen] += 1
+                    changed = True
+            if not changed:
+                break
+        q = 0.
+        for r in range(nr):
+            for c in range(nc):
+                if labels[r] == labels[nr+c]:
+                    q += B[r, c]
+        q /= m
+        if q &gt; best_q:
+            best_q = q
+            bestlabels[:] = labels
+    return best_q, bestlabels
+
+
+def independent_barber_Q(M, lab):
+
+    nr, nc = M.shape
+    k = M.sum(axis=1).astype(float)
+    d = M.sum(axis=0).astype(float)
+    m = float(M.sum())
+    Q = 0.0
+    for x in np.unique(lab):
+        rows = np.flatnonzero(lab[:nr] == x)
+        cols = np.flatnonzero(lab[nr:] == x)
+        if len(rows) and len(cols):
+            observed = float(M[np.ix_(rows, cols)].sum())
+            expected = float(k[rows].sum() * d[cols].sum() / m)
+            Q += observed - expected
+    return Q / m
+
+
+def count_switches(M):
+    num = 0
+    for a in range(len(M)):
+        for b in range(a + 1, len(M)):
+            a_only = np.count_nonzero((M[a] == 1) &amp; (M[b] == 0))
+            b_only = np.count_nonzero((M[a] == 0) &amp; (M[b] == 1))
+            num += int(a_only * b_only)
+    return num
+
+
+def read_incidence(source, mode, human_merge=True):
+    fields = (&#x27;Species&#x27;, &#x27;Viral_Family&#x27;) if mode == &#x27;viral&#x27; else (&#x27;Wild_Animal&#x27;, &#x27;WHO_Pathogen&#x27;)
+    edges = set()
+    human_labels = set()
+    raw_hosts = set()
+    skipped = 0
+    nrows = 0
+    with open(source, encoding=&#x27;utf-8-sig&#x27;, newline=&#x27;&#x27;) as handle:
+        reader = csv.DictReader(handle, delimiter=&#x27;\t&#x27;)
+        required = set(fields) | {&#x27;Frequency&#x27;}
+        if not reader.fieldnames or not required.issubset(reader.fieldnames):
+            raise ValueError(f&#x27;Expected columns {required}; got {reader.fieldnames}&#x27;)
+        for index, row in enumerate(reader, start=2):
+            nrows += 1
+            host = (row[fields[0]] or &#x27;&#x27;).strip()
+            taxon = (row[fields[1]] or &#x27;&#x27;).strip()
+            if not host or not taxon:
+                raise ValueError(f&#x27;Missing host/taxon on input line {index}&#x27;)
+            raw_hosts.add(host)
+            try:
+                frequency = float(row[&#x27;Frequency&#x27;])
+            except (ValueError, TypeError):
+                raise ValueError(f&#x27;Invalid Frequency at line {index}: {row[&quot;Frequency&quot;]}&#x27;) from None
+            if not math.isfinite(frequency):
+                raise ValueError(f&#x27;Non-finite Frequency at line {index}&#x27;)
+            if frequency &lt;= 0:
+                skipped += 1
+                continue
+            if human_merge and host.casefold() in {&#x27;human&#x27;, &#x27;homo sapiens&#x27;}:
+                human_labels.add(host)
+                host = &#x27;Homo sapiens&#x27;
+            edges.add((host, taxon))
+    hs = sorted({h for h, _ in edges})
+    ts = sorted({t for _, t in edges})
+    hidx = {h:i for i,h in enumerate(hs)}
+    tidx = {t:i for i,t in enumerate(ts)}
+    M = np.zeros((len(hs), len(ts)), dtype=np.uint8)
+    for h,t in edges:
+        M[hidx[h], tidx[t]] = 1
+    if M.shape[0] &lt; 2 or M.shape[1] &lt; 2:
+        raise ValueError(&#x27;Need &gt;=2 hosts and &gt;=2 taxa&#x27;)
+    audit = {&#x27;source_rows&#x27;:nrows, &#x27;skipped_nonpositive_frequency&#x27;:skipped,
+             &#x27;raw_host_labels&#x27;:len(raw_hosts), &#x27;human_labels_merged&#x27;:sorted(human_labels),
+             &#x27;hosts_after_cleaning&#x27;:len(hs), &#x27;taxa&#x27;:len(ts), &#x27;edges&#x27;:int(M.sum())}
+    return M, hs, ts, audit
+
+
+def write_matrix(path, M, hs, ts):
+    with open(path, &#x27;w&#x27;, encoding=&#x27;utf-8&#x27;, newline=&#x27;&#x27;) as f:
+        w=csv.writer(f, delimiter=&#x27;\t&#x27;)
+        w.writerow([&#x27;Host&#x27;] + ts)
+        for i,h in enumerate(hs):
+            w.writerow([h] + M[i].tolist())
+
+
+def save_null_results(path, rows):
+    tmp = str(path) + &#x27;.tmp&#x27;
+    with open(tmp, &#x27;w&#x27;, encoding=&#x27;utf-8&#x27;, newline=&#x27;&#x27;) as f:
+        w = csv.DictWriter(f, fieldnames=[&#x27;iteration&#x27;,&#x27;Q_null&#x27;,&#x27;changed_cells&#x27;,&#x27;accepted_trades&#x27;])
+        w.writeheader()
+        w.writerows(rows)
+    os.replace(tmp, path)
+
+
+def read_null_results(path):
+    if not path.exists():
+        return []
+    with path.open(encoding=&#x27;utf-8&#x27;, newline=&#x27;&#x27;) as f:
+        out = list(csv.DictReader(f))
+    rows = []
+    for i, row in enumerate(out, start=1):
+        if int(row[&#x27;iteration&#x27;]) != i:
+            raise ValueError(&#x27;Checkpoint iteration numbers not consecutive&#x27;)
+        rows.append({&#x27;iteration&#x27;:i, &#x27;Q_null&#x27;:float(row[&#x27;Q_null&#x27;]),
+                     &#x27;changed_cells&#x27;:int(row[&#x27;changed_cells&#x27;]),
+                     &#x27;accepted_trades&#x27;:int(row[&#x27;accepted_trades&#x27;])})
+    return rows
+
+
+def atomic_json(path, obj):
+    tmp = str(path) + &#x27;.tmp&#x27;
+    with open(tmp, &#x27;w&#x27;, encoding=&#x27;utf-8&#x27;) as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, path)
+
+
+def run(args):
+    start = time.perf_counter()
+    source = Path(args.input).resolve()
+    if not source.is_file():
+        raise FileNotFoundError(source)
+    if args.n_null &lt; 2 or args.starts &lt; 1 or args.trades_per_row &lt; 1:
+        raise ValueError(&#x27;--n-null &gt;= 2, --starts &gt;= 1 and --trades-per-row &gt;= 1 required&#x27;)
+    M, hosts, taxa, audit = read_incidence(source, args.mode, not args.no_merge_human)
+    out = Path(args.out).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    sha = hashlib.sha256(source.read_bytes()).hexdigest()
+    run_options = {&#x27;mode&#x27;:args.mode,&#x27;input_sha256&#x27;:sha,&#x27;merge_human&#x27;:not args.no_merge_human,
+                   &#x27;n_null&#x27;:args.n_null,&#x27;starts&#x27;:args.starts,
+                   &#x27;trades_per_row&#x27;:args.trades_per_row,&#x27;seed&#x27;:args.seed}
+    config = out / &#x27;analysis_config.json&#x27;
+    if config.exists():
+        old_config = json.loads(config.read_text(encoding=&#x27;utf-8&#x27;))
+        if old_config != run_options:
+            raise ValueError(&#x27;Output folder already contains a DIFFERENT analysis. Use another --out.&#x27;)
+    else:
+        atomic_json(config, run_options)
+    write_matrix(out/&#x27;binary_incidence_matrix.tsv&#x27;,M,hosts,taxa)
+    atomic_json(out/&#x27;input_audit.json&#x27;,audit)
+    nr,nc = M.shape
+    n_edges = int(M.sum())
+    n_switches = count_switches(M)
+    print(f&#x27;Input: {source.name}&#x27;,flush=True)
+    print(f&#x27;Network: hosts={nr}, taxa={nc}, edges={n_edges}, density={M.mean():.5f}, &#x27;
+          f&#x27;valid 2x2 switches={n_switches}&#x27;,flush=True)
+    print(&#x27;Human merged labels:&#x27;,audit[&#x27;human_labels_merged&#x27;],flush=True)
+    if n_switches == 0:
+        atomic_json(out/&#x27;summary.json&#x27;, {&#x27;status&#x27;:&#x27;fixed_fixed_degenerate&#x27;,**audit,
+                    &#x27;valid_2x2_switches&#x27;:0,&#x27;p_value&#x27;:None,&#x27;z_score&#x27;:None,
+                    &#x27;explanation&#x27;:&#x27;No degree-preserving alternatives; inferential null p-value is invalid.&#x27;})
+        print(&#x27;DEGENERATE: no fixed-fixed randomization possible; no p-value.&#x27;, flush=True)
+        return
+
+    Qobs, labels = optimize_barber_modularity(M, args.starts, args.seed)
+    verify = independent_barber_Q(M,labels)
+    if not np.isclose(Qobs,verify,rtol=1e-9,atol=1e-9):
+        raise AssertionError(f&#x27;Independent modularity check failed: {Qobs} vs {verify}&#x27;)
+    with open(out/&#x27;observed_modules.tsv&#x27;,&#x27;w&#x27;,encoding=&#x27;utf-8&#x27;,newline=&#x27;&#x27;) as f:
+        w=csv.writer(f,delimiter=&#x27;\t&#x27;)
+        w.writerow([&#x27;node_type&#x27;,&#x27;node&#x27;,&#x27;module&#x27;,&#x27;degree&#x27;])
+        for i,h in enumerate(hosts):w.writerow([&#x27;host&#x27;,h,int(labels[i]),int(M[i].sum())])
+        for j,t in enumerate(taxa):w.writerow([&#x27;taxon&#x27;,t,int(labels[nr+j]),int(M[:,j].sum())])
+    print(f&#x27;Q_observed={Qobs:.8f}; independent calculation check=PASS&#x27;,flush=True)
+
+    checkpoint = out/&#x27;null_modularity_values.csv&#x27;
+    rows = read_null_results(checkpoint)
+    if rows:
+        if not args.resume:
+            raise ValueError(&#x27;Found prior checkpoint. Use --resume or a new --out directory.&#x27;)
+        if len(rows)&gt;args.n_null:
+            raise ValueError(&#x27;Checkpoint longer than requested simulations&#x27;)
+        print(f&#x27;Resuming from {len(rows)} completed null matrices&#x27;,flush=True)
+    elif args.resume:
+        print(&#x27;No prior progress found, starting new run&#x27;,flush=True)
+    original_row_sums=M.sum(axis=1).astype(np.int64)
+    original_col_sums=M.sum(axis=0).astype(np.int64)
+    trades=args.trades_per_row*nr
+    save_every = max(1,args.save_every)
+    for i in range(len(rows),args.n_null):
+        N=M.copy()
+        set_numba_seed(args.seed+100000+i)
+        accepted=int(curveball_shuffle_inplace(N,trades))
+        if (not np.array_equal(N.sum(axis=0),original_col_sums) or
+                not np.array_equal(N.sum(axis=1),original_row_sums)):
+            raise AssertionError(f&#x27;Degree preservation failed at null {i+1}&#x27;)
+        changed=int(np.count_nonzero(M!=N))
+        q, labn = optimize_barber_modularity(N,args.starts,args.seed+200000+i)
+        if not np.isclose(q,independent_barber_Q(N,labn),rtol=1e-8,atol=1e-8):
+            raise AssertionError(f&#x27;Barber Q independent check failed at {i+1}&#x27;)
+        rows.append({&#x27;iteration&#x27;:i+1,&#x27;Q_null&#x27;:float(q),
+                     &#x27;changed_cells&#x27;:changed,&#x27;accepted_trades&#x27;:accepted})
+        if (i+1)%save_every==0 or i+1==args.n_null:
+            save_null_results(checkpoint,rows)
+            print(f&#x27;Completed {i+1}/{args.n_null} | latest Q={q:.5f} | changed cells={changed} &#x27;
+                  f&#x27;| elapsed={time.perf_counter()-start:.1f}s&#x27;,flush=True)
+    qnull=np.array([r[&#x27;Q_null&#x27;] for r in rows],dtype=float)
+    sd=float(qnull.std(ddof=1))
+    nge=int(np.count_nonzero(qnull&gt;=Qobs-1e-12))
+    p=(nge+1)/(len(rows)+1)
+    summary={**audit,&#x27;status&#x27;:&#x27;complete&#x27;,
+             &#x27;network_density&#x27;:float(M.mean()),&#x27;valid_2x2_switches&#x27;:n_switches,
+             &#x27;Q_observed&#x27;:float(Qobs),&#x27;Q_null_mean&#x27;:float(qnull.mean()),
+             &#x27;Q_null_sd&#x27;:sd,&#x27;Z&#x27;:float((Qobs-qnull.mean())/sd) if sd&gt;0 else None,
+             &#x27;p_upper_empirical&#x27;:float(p),&#x27;n_null_at_or_above_observed&#x27;:nge,
+             &#x27;n_null&#x27;:len(rows),&#x27;starts&#x27;:args.starts,&#x27;trades_per_row&#x27;:args.trades_per_row,
+             &#x27;min_changed_cells&#x27;:int(min(r[&#x27;changed_cells&#x27;] for r in rows)),
+             &#x27;mean_changed_cells&#x27;:float(np.mean([r[&#x27;changed_cells&#x27;] for r in rows])),
+             &#x27;null_lag1_autocorrelation&#x27;:float(np.corrcoef(qnull[:-1],qnull[1:])[0,1]) if len(qnull)&gt;4 and qnull.std()&gt;0 else None,
+             &#x27;time_seconds&#x27;:float(time.perf_counter()-start),
+             &#x27;python_version&#x27;:platform.python_version(), &#x27;numpy_version&#x27;:np.__version__}
+    import numba
+    summary[&#x27;numba_version&#x27;]=numba.__version__
+    atomic_json(out/&#x27;summary.json&#x27;,summary)
+    try:
+        import matplotlib
+        matplotlib.use(&#x27;Agg&#x27;)
+        import matplotlib.pyplot as plt
+        fig, ax=plt.subplots(figsize=(7.5,4.5))
+        ax.hist(qnull,bins=30)
+        ax.axvline(Qobs,ls=&#x27;--&#x27;,lw=2,label=f&#x27;Observed Q = {Qobs:.4f}&#x27;)
+        ax.set_xlabel(&#x27;Barber bipartite modularity Q&#x27;)
+        ax.set_ylabel(&#x27;Number of randomized networks&#x27;)
+        ax.legend()
+        fig.tight_layout()
+        fig.savefig(out/&#x27;null_modularity_distribution.png&#x27;,dpi=220)
+        plt.close(fig)
+    except ImportError:
+        print(&#x27;Optional matplotlib not available: skipping PNG output&#x27;,flush=True)
+    print(f&#x27;FINISHED: Q_obs={Qobs:.6f}, Q_null={qnull.mean():.6f} +/- {sd:.6f}, &#x27;
+          f&#x27;Z={summary[&quot;Z&quot;]}, p={p:.6g}&#x27;,flush=True)
+    print(&#x27;Saved results in:&#x27;,out,flush=True)
+
+
+def self_test():
+
+    small=np.array([[1,0],[0,1]], dtype=np.uint8)
+    labs=np.array([0,1,0,1],dtype=np.int64)
+    assert abs(independent_barber_Q(small,labs)-0.5)&lt;1e-12
+    assert abs(independent_barber_Q(np.ones((3,2),dtype=np.uint8),np.zeros(5,dtype=np.int64)))&lt;1e-12
+    set_numba_seed(12345)
+    x=small.copy()
+    curveball_shuffle_inplace(x,50)
+    assert np.array_equal(small.sum(0),x.sum(0))
+    assert np.array_equal(small.sum(1),x.sum(1))
+    q,l=optimize_barber_modularity(small,8,111)
+    assert abs(q-independent_barber_Q(small,l))&lt;1e-12
+
+    a=small.copy();b=small.copy()
+    set_numba_seed(100);curveball_shuffle_inplace(a,20)
+    set_numba_seed(100);curveball_shuffle_inplace(b,20)
+    assert np.array_equal(a,b)
+
+    nested=np.array([[1,1,1],[1,1,0],[1,0,0]],dtype=np.uint8)
+    assert count_switches(nested)==0
+    print(&#x27;SELF-TEST PASS: modularity formula, margins, seeded randomization, nesting&#x27;,flush=True)
+
+
+def main():
+    p=argparse.ArgumentParser(description=&#x27;Curveball fixed-degree null model + Barber bipartite modularity&#x27;)
+    p.add_argument(&#x27;--mode&#x27;,choices=[&#x27;viral&#x27;,&#x27;bacterial&#x27;],default=&#x27;viral&#x27;)
+    p.add_argument(&#x27;--input&#x27;,help=&#x27;TSV input file&#x27;)
+    p.add_argument(&#x27;--out&#x27;,default=&#x27;results_figure6a&#x27;)
+    p.add_argument(&#x27;--n-null&#x27;,type=int,default=999)
+    p.add_argument(&#x27;--starts&#x27;,type=int,default=10)
+    p.add_argument(&#x27;--trades-per-row&#x27;,type=int,default=30)
+    p.add_argument(&#x27;--seed&#x27;,type=int,default=20261121)
+    p.add_argument(&#x27;--save-every&#x27;,type=int,default=20)
+    p.add_argument(&#x27;--no-merge-human&#x27;,action=&#x27;store_true&#x27;,help=&#x27;NOT recommended for Figure 6a&#x27;)
+    p.add_argument(&#x27;--resume&#x27;,action=&#x27;store_true&#x27;,help=&#x27;Continue matching previous run&#x27;)
+    p.add_argument(&#x27;--self-test&#x27;,action=&#x27;store_true&#x27;)
+    a=p.parse_args()
+    if a.self_test:
+        self_test()
+        return
+    if not a.input:
+        p.error(&#x27;--input required unless --self-test&#x27;)
+    run(a)
+
+
+if __name__ == &#x27;__main__&#x27;:
+    main()</pre>
+</div><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","spa":2}' crossorigin="anonymous"></script>
+</body></html>
