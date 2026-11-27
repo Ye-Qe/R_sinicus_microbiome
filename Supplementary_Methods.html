@@ -50,7 +50,7 @@ pre{white-space:pre;tab-size:4} details{margin:0 0 16px} summary{cursor:pointer;
 <div class="box"><p><b>Computational methods.</b> This document presents the analysis scripts and command templates in the order of the major analytical stages. The parameters are included in the corresponding code blocks. To execute an individual script, save its code using the filename shown above the block, install the required software, and specify the relevant input and output paths and reference files. For scripts using environment variables, set the required variables before execution.</p><p style="margin:0">The code is intended for a Linux environment with Bash and Python. Individual stages require their corresponding bioinformatic tools and Python libraries (including NumPy, Numba, Biopython, pandas and Matplotlib).</p></div>
 <div class="toc"><a href="#s1">S1 &nbsp;Read quality control</a><a href="#s2">S2 &nbsp;Host sequence removal</a><a href="#s3">S3 &nbsp;Metagenomic assembly and contig processing</a><a href="#s4">S4 &nbsp;Viral identification and sequence annotation</a><a href="#s5">S5 &nbsp;Phylogenetic analysis and candidate viral lineages</a><a href="#s6">S6 &nbsp;Bacterial taxonomy and priority-pathogen screening</a><a href="#s7">S7 &nbsp;Functional gene annotation</a><a href="#s8">S8 &nbsp;ARG–MGE co-occurrence and genomic context</a><a href="#s9">S9 &nbsp;Host prediction and cross-host sequence sharing</a><a href="#s10">S10 &nbsp;Figure 6 network statistical analysis</a></div>
 <h2 id="s1">S1 &nbsp;Read quality control</h2>
-<p>Short-read and long-read filtering. Public read quality filtering uses Q20, a maximum low-quality base fraction of 40%, a minimum length of 50 bp and poly-G trimming. The bat short-read and long-read commands use the software defaults for quality filtering.</p>
+<p>Short-read and long-read filtering. Public read quality filtering uses Q20, a maximum low-quality base fraction of 40%, a minimum length of 50 bp and poly-G trimming. The bat short-read command uses the software defaults for quality filtering. For long reads, the command template below uses a minimum read length of 500 bp and a minimum mean base-call accuracy of 80% as proposed filtering settings; the original run-specific thresholds are not available in the archived scripts.</p>
 <h3>S1.1 &nbsp;<code>01_bat_read_qc.sh</code></h3><pre>#!/usr/bin/env bash
 
 set -euo pipefail
@@ -60,7 +60,7 @@ fastp -i &quot;$1&quot; -I &quot;$2&quot; -o &quot;$3&quot; -O &quot;$4&quot; -w
 
 set -euo pipefail
 [[ $# == 2 ]] || { echo &quot;Usage: $0 INPUT_FASTQ OUTPUT_FASTQ&quot; &gt;&amp;2; exit 2; }
-filtlong &quot;$1&quot; &gt; &quot;$2&quot;</pre>
+filtlong --min_length 500 --min_mean_q 80 &quot;$1&quot; &gt; &quot;$2&quot;</pre>
 <h3>S1.3 &nbsp;<code>public_read_qc.sh</code></h3><pre>#!/usr/bin/env bash
 
 set -euo pipefail
